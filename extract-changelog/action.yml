@@ -1,0 +1,172 @@
+
+name: 'Extract Changelog Changes'
+description: 'Extracts changelog content for a specific version from various changelog file formats'
+author: 'Trafera'
+
+inputs:
+  library-name:
+    description: 'Name of the library being released'
+    required: true
+  version:
+    description: 'Version to extract from changelog (e.g., 1.0.1)'
+    required: true
+  library-directory:
+    description: 'Path to the library source directory'
+    required: true
+  create-artifact:
+    description: 'Whether to create and upload an artifact with changelog content'
+    required: false
+    default: 'true'
+  changelog-content-path:
+    description: 'Path to save the changelog content artifact.  Do not include a trailing slash.'
+    required: true
+
+outputs:
+  changelog-content:
+    description: 'Extracted changelog content for the specified version'
+    value: ${{ steps.extract.outputs.changelog-content }}
+  changelog-file-found:
+    description: 'Whether a changelog file was found'
+    value: ${{ steps.extract.outputs.changelog-file-found }}
+  changelog-file-path:
+    description: 'Path to the changelog file that was found'
+    value: ${{ steps.extract.outputs.changelog-file-path }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Extract changelog content
+      id: extract
+      shell: bash
+      run: |
+        extract_changelog_section() {
+          local changelog_content=""
+          local changelog_file="$1"
+          local version="$2"
+          local library_name="$3"
+          local exact_match_found=false
+          local version_section_pattern_generic="(#{2,3} \\[[Vv]?[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9]+)?)"
+          local version_section_pattern="(#{2,3} \\[[Vv]?${version}\\])"
+          local section_name_pattern="(#{3,4} (Added|Changed|Deprecated|Removed|Fixed|Security))"
+          local bullet_pattern="(^\\- )"
+          local current_section=""
+
+          if [ -z "$changelog_file" ]; then
+            echo "No changelog file provided. Skipping extraction."
+            changelog-content="This release includes updates to $library_name, but no changelog file was found."
+          else 
+            while IFS= read -r line || [[ -n "$line" ]]; do
+              if [[ "$exact_match_found" == "true" && "$line" =~ $version_section_pattern_generic ]]; then
+                  echo "DEBUG: Pattern '$version_section_pattern_generic' matches line: $line"
+                  break
+              fi
+              if [[ "$line" =~ $version_section_pattern ]]; then
+                  echo "DEBUG: Pattern '$version_section_pattern' matches line: $line"
+                  exact_match_found="true"
+              fi
+              if [[ "$exact_match_found" == "true" && "$line" =~ $section_name_pattern ]]; then
+                  echo "DEBUG: Pattern '$section_name_pattern' matches line: $line"
+                  changelog_content="${changelog_content}${line}"$'\n'
+              fi
+
+              if [[ "$exact_match_found" == "true" && "$line" =~ $bullet_pattern ]]; then
+                  changelog_content="${changelog_content}${line}"$'\n'
+              fi
+            done < "$changelog_file"
+          fi
+
+          # Export results as global variables for use in the main script
+          CHANGELOG_CONTENT="$changelog_content"
+          CHANGELOG_FILE_FOUND="$changelog_file_found"
+          CHANGELOG_FILE_PATH="$changelog_file_path"
+          
+          echo "=== DEBUG: Final results ==="
+          echo "DEBUG: CHANGELOG_CONTENT='$CHANGELOG_CONTENT'"
+          echo "DEBUG: CHANGELOG_FILE_FOUND='$CHANGELOG_FILE_FOUND'"
+          echo "DEBUG: CHANGELOG_FILE_PATH='$CHANGELOG_FILE_PATH'"
+          echo "=== END DEBUG ==="
+        }
+
+
+        LIBRARY_NAME="${{ inputs.library-name }}"
+        VERSION="${{ inputs.version }}"
+        LIBRARY_DIRECTORY="${{ inputs.library-directory }}"
+        
+        echo "Extracting changelog for $LIBRARY_NAME v$VERSION from $LIBRARY_DIRECTORY"
+        
+        # Look for changelog files in the library directory
+        LIBRARY_ROOT_DIR=$(dirname "${{ inputs.library-directory }}")  
+          if [ $? -ne 0 ]; then  
+            echo "Error: Failed to determine the directory name for ${{ inputs.library-directory }}. Falling back to current directory." >&2  
+            LIBRARY_ROOT_DIR="."
+          fi
+        CHANGELOG_FILE=""
+        
+        # Check common changelog file names and locations
+        for changelog_path in \
+          "../${LIBRARY_ROOT_DIR}/CHANGELOG.md" \
+          "../${LIBRARY_ROOT_DIR}/changelog.md" \
+          "../${LIBRARY_ROOT_DIR}/Changelog.md" \
+          "../${LIBRARY_ROOT_DIR}/CHANGES.md" \
+          "../${LIBRARY_ROOT_DIR}/changes.md" \
+          "${LIBRARY_ROOT_DIR}/CHANGELOG.md" \
+          "${LIBRARY_ROOT_DIR}/changelog.md" \
+          "${LIBRARY_ROOT_DIR}/Changelog.md" \
+          "${LIBRARY_ROOT_DIR}/CHANGES.md" \
+          "${LIBRARY_ROOT_DIR}/changes.md" \
+          "${LIBRARY_DIRECTORY}/CHANGELOG.md" \
+          "${LIBRARY_DIRECTORY}/changelog.md" \
+          "${LIBRARY_DIRECTORY}/Changelog.md" \
+          "${LIBRARY_DIRECTORY}/CHANGES.md" \
+          "${LIBRARY_DIRECTORY}/changes.md"; do
+          
+          if [ -f "$changelog_path" ]; then
+            CHANGELOG_FILE="$changelog_path"
+            echo "Found changelog at: $CHANGELOG_FILE"
+            break
+          else 
+            echo "Changelog file not found at: $changelog_path"
+          fi
+        done
+        # Initialize outputs
+        CHANGELOG_CONTENT=""
+        CHANGELOG_FILE_FOUND="false"
+        CHANGELOG_FILE_PATH=""
+        extract_changelog_section "$CHANGELOG_FILE" "$VERSION" "$LIBRARY_NAME"
+        # Set outputs (handle multiline content properly)
+        {
+          echo "changelog-content<<CHANGELOG_EOF"
+          echo "$CHANGELOG_CONTENT"
+          echo "CHANGELOG_EOF"
+        } >> $GITHUB_OUTPUT
+        
+        echo "changelog-file-found=$CHANGELOG_FILE_FOUND" >> $GITHUB_OUTPUT
+        echo "changelog-file-path=$CHANGELOG_FILE_PATH" >> $GITHUB_OUTPUT
+        
+        echo "=== Extracted Changelog Content ==="
+        echo "$CHANGELOG_CONTENT"
+        echo "=== End Changelog Content ==="
+
+    - name: Create changelog artifact
+      if: ${{ inputs.create-artifact == 'true' }}
+      shell: bash
+      run: |
+        mkdir -p ${{ inputs.changelog-content-path }}
+        CHANGELOG_CONTENT_FILE="${{ inputs.changelog-content-path }}/changelog-${{ inputs.library-name }}.md"
+        
+        # Save changelog content to file for artifact upload
+        cat > "$CHANGELOG_CONTENT_FILE" << 'CHANGELOG_EOF'
+        ${{ steps.extract.outputs.changelog-content }}
+        CHANGELOG_EOF
+        
+        echo "Changelog content saved to: $CHANGELOG_CONTENT_FILE"
+        echo "File found: ${{ steps.extract.outputs.changelog-file-found }}"
+        echo "File path: ${{ steps.extract.outputs.changelog-file-path }}"
+
+    - name: Upload changelog content
+      if: ${{ inputs.create-artifact == 'true' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: changelog-content-${{ inputs.library-name }}
+        path: ${{ inputs.changelog-content-path }}/
+        retention-days: 1
