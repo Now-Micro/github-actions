@@ -1,0 +1,141 @@
+name: 'DICE Configuration Action'
+description: 'Apply environment-specific configurations to DICE appsettings.json files'
+inputs:
+  app-cors-origins:
+    description: 'CORS origins for the application'
+    required: false
+  asset-management-connection-string:
+    description: 'Connection string for Asset Management Project'
+    required: false
+  authserver-authority:
+    description: 'Auth server URL'
+    required: false
+  authserver-encryption-certificate-thumbprint:
+    description: 'Thumbprint for the encryption certificate used by the auth server'
+    required: false
+  authserver-signing-certificate-thumbprint:
+    description: 'Thumbprint for the signing certificate used by the auth server'
+    required: false
+  configurator-connection-string:
+    description: 'Connection string for Configurator Project'
+    required: false
+  crm-connection-string:
+    description: 'Connection string for CRM Project'
+    required: false
+  csi-client-id:
+    description: 'Client ID for CSI authentication'
+    required: false
+  csi-client-secret:
+    description: 'Client secret for CSI authentication'
+    required: false
+  csi-password:
+    description: 'Password for CSI authentication'
+    required: false
+  csi-username:
+    description: 'Username for CSI authentication'
+    required: false
+  db-connection-string:
+    description: 'Database connection string'
+    required: false
+  device-management-connection-string:
+    description: 'Connection string for Device Management Project (Production Only)'
+    required: false
+  device-management-migration-connection-string:
+    description: 'Connection string for Device Management Migration Project (Beta Only)'
+    required: false  
+  dice-portal-web-url:
+    description: 'Portal web URL'
+    required: false
+  environment:
+    description: 'Target environment (beta/production)'
+    required: false
+  identity-clients-default-authority:
+    description: 'Default authority for identity clients'
+    required: false
+  indirect-customer-api-key:
+    description: 'API key for indirect customer access'
+    required: false
+  legacy-crm-url:
+    description: 'Legacy CRM URL'
+    required: false
+  openiddict-portal-web-url:
+    description: 'OpenIddict Portal Web URL'
+    required: false
+  rabbitmq-connection-string:
+    description: 'RabbitMQ connection string'
+    required: false
+  redis-configuration:
+    description: 'Redis connection string'
+    required: false
+  remote-services-abp-account-public-base-url:
+    description: 'Base URL for ABP Account Public Remote Service'
+    required: false
+  remote-services-asset-management-base-url:
+    description: 'Base URL for Asset Management Remote Service'
+    required: false
+  remote-services-configurator-base-url:
+    description: 'Base URL for Configurator Remote Service'
+    required: false
+  remote-services-default-base-url:
+    description: 'Base URL for Default Remote Service'
+    required: false
+  remote-services-device-management-base-url:
+    description: 'Base URL for Device Management Remote Service'
+    required: false
+  remote-services-sop-management-base-url:
+    description: 'Base URL for SOP Management Remote Service'
+    required: false
+  remote-services-ticket-management-base-url:
+    description: 'Base URL for Ticket Management Remote Service'
+    required: false
+  sop-management-connection-string:
+    description: 'Connection string for SOP Management Project'
+    required: false
+  ticket-management-connection-string:
+    description: 'Connection string for Ticket Management Project'
+    required: false
+
+runs:
+  using: 'composite'
+  steps:
+    - name: List appsettings files
+      shell: bash
+      run: |
+        ls -al 
+        ls -al Modules/NowMicro.Dice.Portal/src/NowMicro.Dice.Portal.AuthServer/
+
+    - name: Apply ${{ inputs.environment }} configurations
+      uses: microsoft/variable-substitution@v1
+      with:
+        files: '**/appsettings.json'
+      env:
+        App.CorsOrigins: ${{ inputs.app-cors-origins }}
+        AuthServer.Authority: ${{ inputs.authserver-authority }}
+        AuthServer.EncryptionCertificateThumbprint: ${{ inputs.authserver-encryption-certificate-thumbprint }}
+        AuthServer.SigningCertificateThumbprint: ${{ inputs.authserver-signing-certificate-thumbprint }}
+        ConnectionStrings.AssetManagement: ${{ inputs.asset-management-connection-string }}
+        ConnectionStrings.Configurator: ${{ inputs.configurator-connection-string }}
+        ConnectionStrings.Crm: ${{ inputs.crm-connection-string }}
+        ConnectionStrings.Default: ${{ inputs.db-connection-string }}
+        ConnectionStrings.DeviceManagement: ${{ inputs.device-management-connection-string }}
+        ConnectionStrings.DeviceManagementMigration: ${{ inputs.device-management-migration-connection-string }}
+        ConnectionStrings.RabbitMQ: ${{ inputs.rabbitmq-connection-string }}
+        ConnectionStrings.SopManagement: ${{ inputs.sop-management-connection-string }}
+        ConnectionStrings.TicketManagement: ${{ inputs.ticket-management-connection-string }}
+        CSI.Client_id: ${{ inputs.csi-client-id }}
+        CSI.Client_secret: ${{ inputs.csi-client-secret }}
+        CSI.Password: ${{ inputs.csi-password }}
+        CSI.Username: ${{ inputs.csi-username }}
+        DicePortalWebUrl: ${{ inputs.dice-portal-web-url }}
+        IdentityClients.Default.Authority: ${{ inputs.identity-clients-default-authority }}
+        IndirectCustomerApiKey: ${{ inputs.indirect-customer-api-key }}
+        LegacyCrmUrl: ${{ inputs.legacy-crm-url }}
+        OpenIddict.Applications.Portal_Web.RootUrl: ${{ inputs.openiddict-portal-web-url }}
+        Redis.Configuration: ${{ inputs.redis-configuration }}
+        RemoteServices.AbpAccountPublic.BaseUrl: ${{ inputs.remote-services-abp-account-public-base-url }}
+        RemoteServices.AssetManagement.BaseUrl: ${{ inputs.remote-services-asset-management-base-url }}
+        RemoteServices.Configurator.BaseUrl: ${{ inputs.remote-services-configurator-base-url }}
+        RemoteServices.Default.BaseUrl: ${{ inputs.remote-services-default-base-url }}
+        RemoteServices.DeviceManagement.BaseUrl: ${{ inputs.remote-services-device-management-base-url }}
+        RemoteServices.SopManagement.BaseUrl: ${{ inputs.remote-services-sop-management-base-url }}
+        RemoteServices.TicketManagement.BaseUrl: ${{ inputs.remote-services-ticket-management-base-url }}
