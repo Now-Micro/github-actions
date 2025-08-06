@@ -5,6 +5,10 @@ inputs:
     description: 'Enable dependency caching (true/false)'
     required: false
     default: 'false'
+  cache-dependency-path:
+    description: 'Path to the dependency lock file for caching (e.g., package-lock.json)'
+    required: false
+    default: 'package-lock.json'
   install-dependencies:
     description: 'Install dependencies using npm ci (true/false)'
     required: false
@@ -26,6 +30,7 @@ runs:
       with:
         node-version: ${{ inputs.node-version }}
         cache: ${{ inputs.cache == 'true' && 'npm' || '' }}
+        cache-dependency-path: ${{ inputs.cache-dependency-path || '' }}
 
     - name: Install dependencies
       if: ${{ inputs.install-dependencies == 'true' }}
