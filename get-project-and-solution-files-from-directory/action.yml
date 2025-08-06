@@ -1,0 +1,99 @@
+name: 'Get Solution or Project File from Directory'
+description: 'Finds the first .sln or .csproj file in a given directory and outputs its path.'
+inputs: 
+  directory:
+    description: 'The directory to search for a .sln or .csproj file.'
+    required: true
+  find-project:
+    description: 'Whether to find a .csproj file.'
+    required: false
+    default: 'false'
+  find-solution:
+    description: 'Whether to find a .sln file.'
+    required: false
+    default: 'true'
+  max-depth:
+    description: 'Maximum depth to search for .sln or .csproj files.'
+    required: false
+    default: '1'
+  
+outputs:
+  project-found:
+    description: 'The path to the first .csproj file found in the directory or its subdirectories.'
+    value: ${{ steps.find-file.outputs.project-found }}
+  solution-found:
+    description: 'The path to the first .sln file found in the directory or its subdirectories.'
+    value: ${{ steps.find-file.outputs.solution-found }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: ./.github/actions/setup-node
+
+    - name: Find .sln or .csproj file
+      id: find-file
+      shell: bash
+      run: |
+        cat > find-sln-or-csproj.js <<'EOF'
+        const fs = require('fs');
+        const path = require('path');
+        let projectFound, solutionFound;
+
+        function walk(dir, maxDepth, findSolution, findProject, currentDepth = 0) {
+          if (currentDepth > maxDepth) return;
+          if (solutionFound && projectFound) {
+              return;
+          }
+          let entries;
+          try {
+            entries = fs.readdirSync(dir, { withFileTypes: true });
+          } catch {
+            return;
+          }
+          for (const entry of entries) {
+            if (!entry.isFile()) continue;
+            if (findSolution && entry.name.endsWith('.sln')) {
+              solutionFound = path.join(dir, entry.name);
+            }
+            if (findProject && entry.name.endsWith('.csproj')) {
+              projectFound = path.join(dir, entry.name);
+            }            
+          }
+          // Recurse into subdirectories
+          for (const entry of entries) {
+            if (entry.isDirectory()) {
+              walk(path.join(dir, entry.name), maxDepth, findSolution, findProject, currentDepth + 1);
+              return;
+            }
+          }
+          return;
+        }
+
+        const inputDir = `./${{ inputs.directory }}`;
+        const maxDepth = parseInt(${{ inputs.max-depth }} || '1', 10);
+        const findSolution = (`${{ inputs.find-solution }}` || 'true').toLowerCase() === 'true';
+        const findProject = (`${{ inputs.find-project }}` || 'false').toLowerCase() === 'true';
+        const githubOutput = process.env.GITHUB_OUTPUT;
+
+        console.log(`Input directory: ${inputDir}`);
+        console.log(`Max depth: ${maxDepth}`);
+        console.log(`Find solution: ${findSolution}`);
+        console.log(`Find project: ${findProject}`);
+        if (!inputDir) {
+          console.error('Input directory is required.');
+          process.exit(1);
+        }
+
+        console.log(`Searching for .sln or .csproj files in ${inputDir}...`);
+        walk(inputDir, maxDepth, findSolution, findProject);
+       
+        console.log(`Project found: ${projectFound || 'None'}`);
+        console.log(`Solution found: ${solutionFound || 'None'}`);
+        if (solutionFound && solutionFound.endsWith('.sln')) {
+          fs.appendFileSync(githubOutput, `solution-found=${solutionFound}\n`);
+        } 
+        if (projectFound && projectFound.endsWith('.csproj')) {
+          fs.appendFileSync(githubOutput, `project-found=${projectFound}\n`);
+        }
+        EOF
+        node find-sln-or-csproj.js
