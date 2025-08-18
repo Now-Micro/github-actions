@@ -8,7 +8,6 @@ inputs:
   cache-dependency-path:
     description: 'Path to the dependency lock file for caching (e.g., package-lock.json)'
     required: false
-    default: 'package-lock.json'
   install-dependencies:
     description: 'Install dependencies using npm ci (true/false)'
     required: false
