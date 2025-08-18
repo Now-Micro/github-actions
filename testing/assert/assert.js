@@ -31,16 +31,16 @@ function run() {
                 break;
             }
         case 'exact':
-            pass = actual.trim() === expected.trim();
+            pass = actual === expected;
             break;
         case 'endswith':
-            pass = actual.trim().endsWith(expected.trim());
+            pass = actual.endsWith(expected);
             break;
         case 'present':
-            pass = actual.trim().includes(expected.trim())
+            pass = actual.includes(expected)
             break;
         case 'absent':
-            pass = !actual.trim().includes(expected.trim())
+            pass = !actual.includes(expected)
             break;
         default:
             console.error(`Unknown mode '${mode}'`);
