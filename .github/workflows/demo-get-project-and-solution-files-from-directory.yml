@@ -82,24 +82,24 @@ jobs:
           directory: demo/get-project-and-solution-files-from-directory/SolutionA/src/A
           find-solution: 'true'
           find-project: 'true'
-          max-depth: 4
+          max-depth: 3
 
-      - name: Assert 3 - No Project Found at Depth 4
+      - name: Assert 3 - No Project Found at Depth 3
         uses: ./testing/assert
         with:
           expected: /^\s*$/
           actual: ${{ steps.project_appa.outputs.project-found || ' ' }}
           mode: regex
-          test-name: Test 3 - No Project Found at Depth 4
+          test-name: Test 3 - No Project Found at Depth 3
           summary-file: ${{ env.SUMMARY_FILE }}
 
-      - name: Assert 3 - No Solution Found at Depth 4
+      - name: Assert 3 - No Solution Found at Depth 3
         uses: ./testing/assert
         with:
           expected: /^\s*$/
           actual: ${{ steps.project_appa.outputs.solution-found || ' ' }}
           mode: regex
-          test-name: Test 3 - No Solution Found at Depth 4
+          test-name: Test 3 - No Solution Found at Depth 3
           summary-file: ${{ env.SUMMARY_FILE }}
 
       - name: Test 4 - Solution & project inside SolutionB
