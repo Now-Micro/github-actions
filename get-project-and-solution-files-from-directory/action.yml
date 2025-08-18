@@ -37,7 +37,7 @@ runs:
     - name: Find .sln or .csproj file
       id: find-file
       shell: bash
-      run: node ./get-project-and-solution-files-from-directory/find-project-or-solution.js
+      run: node ./get-project-and-solution-files-from-directory/get-project-and-solution-files-from-directory.js
       env:
         INPUT_DIRECTORY: ${{ inputs.directory }}
         INPUT_MAX_DEPTH: ${{ inputs.max-depth }}
