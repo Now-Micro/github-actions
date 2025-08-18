@@ -57,14 +57,14 @@ runs:
         
     - name: Setup Node.js
       if: inputs.node-project-path != ''
-      uses: Now-Micro/actions/setup-node@0.0.2
+      uses: ./setup-node
       with:
         node-version: ${{ inputs.node-version }}
         cache: 'npm'
         cache-dependency-path: ${{ inputs.npm-cache-dependency-path }}
 
     - name: Configure Github NuGet source
-      uses: ./.github/actions/nuget/configure-source
+      uses: ./nuget/configure-source
       with:
         name: 'CodeBits'
         password: ${{ inputs.github-packages-token }}
@@ -72,7 +72,7 @@ runs:
         username: ${{ github.actor }}
 
     - name: Configure Azure DevOps source
-      uses: ./.github/actions/nuget/configure-source
+      uses: ./nuget/configure-source
       with:
         name: 'Code-Hole'
         password: ${{ inputs.azure-devops-password }}

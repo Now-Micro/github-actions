@@ -1,0 +1,31 @@
+name: 'Run dotnet lint checks'
+description: 'Runs checks for a specific directory'
+author: 'Trafera'
+
+inputs:
+  directory:
+    description: 'Directory to run linting in'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Get solution or project file
+      id: get-solution-or-proj
+      uses: ./get-project-and-solution-files-from-directory
+      with:
+        directory: ${{ inputs.directory }}
+        max-depth: '3'
+        find-solution: true
+        find-project: true
+
+    - name: Check formatting
+      shell: bash
+      run: |
+        PROJECT_OR_SOLUTION=${{ steps.get-solution-or-proj.outputs.solution-found || steps.get-solution-or-proj.outputs.project-found }}
+        if [ -z "$PROJECT_OR_SOLUTION" ]; then
+          echo "No .sln or .csproj found in ${{ inputs.directory }}"
+          exit 1
+        fi
+        dotnet format "$PROJECT_OR_SOLUTION" --verify-no-changes
+  
