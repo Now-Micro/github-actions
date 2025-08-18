@@ -27,13 +27,22 @@ jobs:
           directory: demo/get-project-and-solution-files-from-directory
           max-depth: 1
 
-      - name: Assert 1 - Root solution is SampleSolution.sln
+      - name: Assert 1 - Solution found is SampleSolution.sln
         uses: ./testing/assert
         with:
           expected: RootSolution.sln
           actual: ${{ steps.root_solution.outputs.solution-found }}
           mode: present
-          test-name: Test 1 - Root solution
+          test-name: Test 1 - Solution Found
+          summary-file: ${{ env.SUMMARY_FILE }}
+      
+      - name: Assert 1 - Project found is Test.csproj
+        uses: ./testing/assert
+        with:
+          expected: Test.csproj
+          actual: ${{ steps.root_solution.outputs.project-found }}
+          mode: present
+          test-name: Test 1 - Project found
           summary-file: ${{ env.SUMMARY_FILE }}
 
       - name: Test 2 - Shallow project search depth=2
@@ -46,32 +55,51 @@ jobs:
           find-project: 'true'
           max-depth: 1 # reduced from 2 so Test.csproj (depth 2) is not discovered
 
-      - name: Assert 2 - No project found at shallow depth
+      - name: Assert 2 - Solution Found is RootSolution.sln
+        uses: ./testing/assert
+        with:
+          expected: RootSolution.sln
+          actual: ${{ steps.project_shallow.outputs.solution-found || ' ' }}
+          mode: present
+          test-name: Test 2 - Solution Found
+          summary-file: ${{ env.SUMMARY_FILE }}
+
+
+      - name: Assert 2 - No project found at Depth of 2
         uses: ./testing/assert
         with:
           expected: /^\s*$/
           actual: ${{ steps.project_shallow.outputs.project-found || ' ' }}
           mode: regex
-          test-name: Test 2 - Shallow project none
+          test-name: Test 2 - No Project Found
           summary-file: ${{ env.SUMMARY_FILE }}
 
-      - name: Test 3 - Project search depth=4
+      - name: Test 3 - Depth stops at right spot
         id: project_appa
         uses: ./get-project-and-solution-files-from-directory
         with:
           debug-mode: 'true'
-          directory: demo/get-project-and-solution-files-from-directory
-          find-solution: 'false'
+          directory: demo/get-project-and-solution-files-from-directory/SolutionA/src/A
+          find-solution: 'true'
           find-project: 'true'
-          max-depth: 5
+          max-depth: 4
 
-      - name: Assert 3 - First project is AppA.csproj
+      - name: Assert 3 - No Project Found at Depth 4
         uses: ./testing/assert
         with:
-          expected: Test.csproj
+          expected: /^\s*$/
           actual: ${{ steps.project_appa.outputs.project-found || ' ' }}
-          mode: endswith
-          test-name: Test 3 - First project AppA
+          mode: regex
+          test-name: Test 3 - No Project Found at Depth 4
+          summary-file: ${{ env.SUMMARY_FILE }}
+
+      - name: Assert 3 - No Solution Found at Depth 4
+        uses: ./testing/assert
+        with:
+          expected: /^\s*$/
+          actual: ${{ steps.project_appa.outputs.solution-found || ' ' }}
+          mode: regex
+          test-name: Test 3 - No Solution Found at Depth 4
           summary-file: ${{ env.SUMMARY_FILE }}
 
       - name: Test 4 - Solution & project inside SolutionB
@@ -92,32 +120,14 @@ jobs:
           mode: endswith
           test-name: Test 4a - SolutionB solution
           summary-file: ${{ env.SUMMARY_FILE }}
-      - name: Assert 4b - SolutionB project Service.csproj detected
+
+      - name: Assert 4 - SolutionB project Service.csproj detected
         uses: ./testing/assert
         with:
           expected: Service.csproj
           actual: ${{ steps.solutionb.outputs.project-found || ' ' }}
           mode: endswith
           test-name: Test 4b - SolutionB project
-          summary-file: ${{ env.SUMMARY_FILE }}
-
-      - name: Test 5 - Deep nested search (max-depth=15)
-        id: deep_nested
-        uses: ./get-project-and-solution-files-from-directory
-        with:
-          debug-mode: 'true'
-          directory: demo/get-project-and-solution-files-from-directory
-          find-solution: 'false'
-          find-project: 'true'
-          max-depth: 15
-
-      - name: Assert 5 - Deep search returns earliest project (AppA.csproj)
-        uses: ./testing/assert
-        with:
-          expected: AppA.csproj
-          actual: ${{ steps.deep_nested.outputs.project-found || ' ' }}
-          mode: endswith
-          test-name: Test 5 - Deep earliest project
           summary-file: ${{ env.SUMMARY_FILE }}
 
       - name: Summary

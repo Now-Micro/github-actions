@@ -1,3 +1,4 @@
+- add input for get-project-and-solution-files-from-directory which is an int that says to return the nth project/solution found
 - bring in the rest of the actions from other projects:
     -refactor based on pattern
     -add tests
