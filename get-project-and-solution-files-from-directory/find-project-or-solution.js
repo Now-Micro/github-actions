@@ -33,11 +33,11 @@ function walk(dir, maxDepth, findSolution, findProject, currentDepth = 0) {
     } else if (entry.isDirectory()) {
       dlog(`Dir: ${full}`);
     }
-    if (findSolution && entry.isFile() && entry.name.endsWith('.sln')) {
+    if (!solutionFound && findSolution && entry.isFile() && entry.name.endsWith('.sln')) {
       solutionFound = full;
       console.log(`Found solution: ${solutionFound}`);
     }
-    if (findProject && entry.isFile() && entry.name.endsWith('.csproj')) {
+    if (!projectFound && findProject && entry.isFile() && entry.name.endsWith('.csproj')) {
       projectFound = full;
       console.log(`Found project: ${projectFound}`);
     }
