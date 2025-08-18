@@ -118,7 +118,7 @@ jobs:
           expected: SolutionB.sln
           actual: ${{ steps.solutionb.outputs.solution-found || ' ' }}
           mode: endswith
-          test-name: Test 4a - SolutionB solution
+          test-name: Test 4 - SolutionB solution
           summary-file: ${{ env.SUMMARY_FILE }}
 
       - name: Assert 4 - SolutionB project Service.csproj detected
@@ -127,7 +127,7 @@ jobs:
           expected: Service.csproj
           actual: ${{ steps.solutionb.outputs.project-found || ' ' }}
           mode: endswith
-          test-name: Test 4b - SolutionB project
+          test-name: Test 4 - SolutionB project
           summary-file: ${{ env.SUMMARY_FILE }}
 
       - name: Summary
