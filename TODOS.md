@@ -1,4 +1,3 @@
-- bring in the rest of the actions from other projects:
-    -refactor based on pattern
-    -add tests
-    -add demo workflow
+- refactor and add test + workflow: 
+    -get-unique-root-directores
+    -get-changed-directories

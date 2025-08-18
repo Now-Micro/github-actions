@@ -1,33 +1,38 @@
-namespace Demo.Api.Tests;
+using Xunit;
+using Microsoft.AspNetCore.Mvc.Testing;
 
-public class ApiTests : IClassFixture<WebApplicationFactory<Program>>
+namespace Demo.Api.Tests
 {
-    private readonly WebApplicationFactory<Program> _factory;
 
-    public ApiTests(WebApplicationFactory<Program> factory)
+    public class ApiTests : IClassFixture<WebApplicationFactory<Program>>
     {
-        _factory = factory.WithWebHostBuilder(_ => { });
-    }
+        private readonly WebApplicationFactory<Program> _factory;
 
-    [Fact]
-    public async Task Root_Returns_Hello()
-    {
-        var client = _factory.CreateClient();
-        var response = await client.GetAsync("/");
-        response.EnsureSuccessStatusCode();
-        var body = await response.Content.ReadAsStringAsync();
-        Assert.Contains("Hello", body);
-    }
+        public ApiTests(WebApplicationFactory<Program> factory)
+        {
+            _factory = factory.WithWebHostBuilder(_ => { });
+        }
 
-    [Theory]
-    [InlineData(1,2,3)]
-    [InlineData(10,5,15)]
-    public async Task Add_Returns_Sum(int a,int b,int expected)
-    {
-        var client = _factory.CreateClient();
-        var response = await client.GetAsync($"/add/{a}/{b}");
-        response.EnsureSuccessStatusCode();
-        var body = await response.Content.ReadAsStringAsync();
-        Assert.Contains($"{expected}", body);
+        [Fact]
+        public async Task Root_Returns_Hello()
+        {
+            var client = _factory.CreateClient();
+            var response = await client.GetAsync("/");
+            response.EnsureSuccessStatusCode();
+            var body = await response.Content.ReadAsStringAsync();
+            Assert.Contains("Hello", body);
+        }
+
+        [Theory]
+        [InlineData(1, 2, 3)]
+        [InlineData(10, 5, 15)]
+        public async Task Add_Returns_Sum(int a, int b, int expected)
+        {
+            var client = _factory.CreateClient();
+            var response = await client.GetAsync($"/add/{a}/{b}");
+            response.EnsureSuccessStatusCode();
+            var body = await response.Content.ReadAsStringAsync();
+            Assert.Contains($"{expected}", body);
+        }
     }
 }
