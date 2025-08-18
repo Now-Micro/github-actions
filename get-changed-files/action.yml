@@ -21,7 +21,7 @@ runs:
   using: 'composite'
   steps:
     - name: Setup Node.js
-      uses: ./.github/actions/setup-node
+      uses: ./setup-node
 
     - name: Determine changed project directories
       id: parse-changes
