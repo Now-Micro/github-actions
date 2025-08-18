@@ -1,7 +1,7 @@
 // Run with coverage: 
-// npx c8 node --test get-project-and-solution-files-from-directory/find-project-or-solution.test.js
+// npx c8 node --test get-project-and-solution-files-from-directory/get-project-and-solution-files-from-directory.test.js
 
-// Comprehensive tests for find-project-or-solution.js
+// Comprehensive tests for get-project-and-solution-files-from-directory.js
 // Covers BFS shallow preference, DFS legacy walk, depth limiting, error paths, debug logging, and output writing.
 
 const test = require('node:test');
@@ -10,7 +10,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
-const SCRIPT_PATH = path.join(__dirname, 'find-project-or-solution.js');
+const SCRIPT_PATH = path.join(__dirname, 'get-project-and-solution-files-from-directory.js');
 const mod = require('./get-project-and-solution-files-from-directory.js');
 
 // Utility: create temp directory

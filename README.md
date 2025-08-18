@@ -19,7 +19,7 @@ Each action follows a consistent pattern:
 6. Outputs are written by appending `name=value` lines to the file pointed to by `GITHUB_OUTPUT`.
 
 Example mapping (from `get-project-and-solution-files-from-directory`):
-- `action.yml` step runs: `node ./get-project-and-solution-files-from-directory/find-project-or-solution.js`
+- `action.yml` step runs: `node ./get-project-and-solution-files-from-directory/get-project-and-solution-files-from-directory.js`
 - Inputs -> env: `INPUT_DIRECTORY`, `INPUT_MAX_DEPTH`, etc.
 - JS writes outputs: `solution-found=...`, `project-found=...`.
 - Tests exercise edge cases (depth limits, multiple matches, invalid input) for 100% coverage.
