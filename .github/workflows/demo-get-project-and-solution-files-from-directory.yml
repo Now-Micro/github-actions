@@ -23,6 +23,7 @@ jobs:
         id: root_solution
         uses: ./get-project-and-solution-files-from-directory
         with:
+          debug-mode: 'true'
           directory: demo/get-project-and-solution-files-from-directory
           max-depth: 1
 
@@ -39,6 +40,7 @@ jobs:
         id: project_shallow
         uses: ./get-project-and-solution-files-from-directory
         with:
+          debug-mode: 'true'
           directory: demo/get-project-and-solution-files-from-directory
           find-solution: 'false'
           find-project: 'true'
@@ -58,10 +60,11 @@ jobs:
         id: project_appa
         uses: ./get-project-and-solution-files-from-directory
         with:
-            directory: demo/get-project-and-solution-files-from-directory
-            find-solution: 'false'
-            find-project: 'true'
-            max-depth: 4
+          debug-mode: 'true'
+          directory: demo/get-project-and-solution-files-from-directory
+          find-solution: 'false'
+          find-project: 'true'
+          max-depth: 4
 
       - name: Assert 3 - First project is AppA.csproj
         uses: ./testing/assert
@@ -76,6 +79,7 @@ jobs:
         id: solutionb
         uses: ./get-project-and-solution-files-from-directory
         with:
+          debug-mode: 'true'
           directory: demo/get-project-and-solution-files-from-directory/SolutionB
           find-solution: 'true'
           find-project: 'true'
@@ -102,6 +106,7 @@ jobs:
         id: deep_nested
         uses: ./get-project-and-solution-files-from-directory
         with:
+          debug-mode: 'true'
           directory: demo/get-project-and-solution-files-from-directory
           find-solution: 'false'
           find-project: 'true'

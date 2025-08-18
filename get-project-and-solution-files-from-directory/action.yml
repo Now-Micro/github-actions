@@ -1,6 +1,10 @@
 name: "Get Solution or Project File from Directory"
 description: "Finds the first .sln or .csproj file in a given directory and outputs its path."
 inputs:
+  debug-mode:
+    description: "Enable debug mode for additional logging."
+    required: false
+    default: "false"
   directory:
     description: "The directory to search for a .sln or .csproj file."
     required: true
@@ -39,3 +43,4 @@ runs:
         INPUT_MAX_DEPTH: ${{ inputs.max-depth }}
         INPUT_FIND_SOLUTION: ${{ inputs.find-solution }}
         INPUT_FIND_PROJECT: ${{ inputs.find-project }}
+        INPUT_DEBUG_MODE: ${{ inputs.debug-mode }}
