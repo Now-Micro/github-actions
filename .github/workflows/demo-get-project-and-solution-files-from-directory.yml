@@ -50,7 +50,7 @@ jobs:
         uses: ./testing/assert
         with:
           expected: /^\s*$/
-          actual: ${{ steps.project_shallow.outputs.project-found }}
+          actual: ${{ steps.project_shallow.outputs.project-found || ' ' }}
           mode: regex
           test-name: Test 2 - Shallow project none
           summary-file: ${{ env.SUMMARY_FILE }}
@@ -69,7 +69,7 @@ jobs:
         uses: ./testing/assert
         with:
           expected: AppA.csproj
-          actual: ${{ steps.project_appa.outputs.project-found }}
+          actual: ${{ steps.project_appa.outputs.project-found || ' ' }}
           mode: endswith
           test-name: Test 3 - First project AppA
           summary-file: ${{ env.SUMMARY_FILE }}
@@ -88,7 +88,7 @@ jobs:
         uses: ./testing/assert
         with:
           expected: SolutionB.sln
-          actual: ${{ steps.solutionb.outputs.solution-found }}
+          actual: ${{ steps.solutionb.outputs.solution-found || ' ' }}
           mode: endswith
           test-name: Test 4a - SolutionB solution
           summary-file: ${{ env.SUMMARY_FILE }}
@@ -96,7 +96,7 @@ jobs:
         uses: ./testing/assert
         with:
           expected: Service.csproj
-          actual: ${{ steps.solutionb.outputs.project-found }}
+          actual: ${{ steps.solutionb.outputs.project-found || ' ' }}
           mode: endswith
           test-name: Test 4b - SolutionB project
           summary-file: ${{ env.SUMMARY_FILE }}
@@ -115,7 +115,7 @@ jobs:
         uses: ./testing/assert
         with:
           expected: AppA.csproj
-          actual: ${{ steps.deep_nested.outputs.project-found }}
+          actual: ${{ steps.deep_nested.outputs.project-found || ' ' }}
           mode: endswith
           test-name: Test 5 - Deep earliest project
           summary-file: ${{ env.SUMMARY_FILE }}
