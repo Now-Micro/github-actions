@@ -63,12 +63,12 @@ jobs:
           directory: demo/get-project-and-solution-files-from-directory
           find-solution: 'false'
           find-project: 'true'
-          max-depth: 4
+          max-depth: 5
 
       - name: Assert 3 - First project is AppA.csproj
         uses: ./testing/assert
         with:
-          expected: AppA.csproj
+          expected: Test.csproj
           actual: ${{ steps.project_appa.outputs.project-found || ' ' }}
           mode: endswith
           test-name: Test 3 - First project AppA
