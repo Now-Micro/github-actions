@@ -1,4 +1,4 @@
-name: Run  Tests
+name: Run Node Tests
 on:
   workflow_dispatch:
 jobs:

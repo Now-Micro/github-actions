@@ -1,4 +1,4 @@
-name: Demo Test - Get Project and Solution Files
+name: Demo - Get Project and Solution Files
 on:
   workflow_dispatch:
 
@@ -44,7 +44,7 @@ jobs:
           directory: demo/get-project-and-solution-files-from-directory
           find-solution: 'false'
           find-project: 'true'
-          max-depth: 2
+          max-depth: 1 # reduced from 2 so Test.csproj (depth 2) is not discovered
 
       - name: Assert 2 - No project found at shallow depth
         uses: ./testing/assert
