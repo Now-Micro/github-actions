@@ -1,5 +1,5 @@
 name: Assert
-description: Assert that two values are equal
+description: Make assertions in GitHub Actions workflows to mimic test frameworks.
 inputs:
   expected:
     description: "The expected value (string or regex suffix)"
@@ -17,34 +17,20 @@ inputs:
     description: "Comparison mode: exact | endswith | present | absent"
     required: false
     default: "exact"
+
 runs:
   using: 'composite'
   steps:
-    - name: Assert values
+    - name: Install Node.js
+      uses: ./setup-node
+
+    - name: Run assertion
       shell: bash
-      run: |
-        set -euo pipefail
-        expected='${{ inputs.expected }}'
-        actual='${{ inputs.actual }}'
-        summary_file='${{ inputs.summary-file }}'
-        test_name='${{ inputs.test-name }}'
-        mode='${{ inputs.mode }}'
-        echo "[ASSERT] $test_name :: mode=$mode expected='$expected' actual='$actual'"
-        pass=false
-        case "$mode" in
-          exact)
-            [ "$actual" = "$expected" ] && pass=true || pass=false ;;
-          endswith)
-            echo "$actual" | grep -q "${expected}$" && pass=true || pass=false ;;
-          present)
-            [ -n "$actual" ] && pass=true || pass=false ;;
-          absent)
-            [ -z "$actual" ] && pass=true || pass=false ;;
-          *) echo "Unknown mode '$mode'" >&2; exit 1 ;;
-        esac
-        if [ "$pass" != true ]; then
-          echo "Assertion FAILED ($mode) :: expected '$expected' actual '$actual'" >&2
-          echo "FAIL: $test_name (expected '$expected' mode=$mode actual='$actual')" >> "$summary_file"
-          exit 1
-        fi
-        echo "PASS: $test_name" >> "$summary_file"
+      run: node ./testing/assert/assert.js
+      env:
+        INPUT_EXPECTED: ${{ inputs.expected }}
+        INPUT_ACTUAL: ${{ inputs.actual }}
+        INPUT_SUMMARY_FILE: ${{ inputs.summary-file }}
+        INPUT_TEST_NAME: ${{ inputs.test-name }}
+        INPUT_MODE: ${{ inputs.mode }}
+        INPUT_PARTIAL_MATCH_ALLOWED: ${{ inputs.partial-match-allowed }}

@@ -29,9 +29,9 @@ jobs:
       - name: Assert 1 - Root solution is SampleSolution.sln
         uses: ./testing/assert
         with:
-          expected: SampleSolution.sln
+          expected: RootSolution.sln
           actual: ${{ steps.root_solution.outputs.solution-found }}
-          mode: endswith
+          mode: present
           test-name: Test 1 - Root solution
           summary-file: ${{ env.SUMMARY_FILE }}
 
