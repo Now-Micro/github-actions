@@ -23,7 +23,8 @@ jobs:
           # find-project defaults to false
 
       - name: Output solution path
-        run: echo 'Solution found: ${{ steps.find_solution.outputs.solution-found }}'
+        run: |
+          echo 'Solution found: ${{ steps.find_solution.outputs.solution-found }}'
 
       - name: Find project only
         id: find_project
@@ -35,7 +36,8 @@ jobs:
           max-depth: 4
 
       - name: Output project path
-        run: echo 'Project found: ${{ steps.find_project.outputs.project-found }}'
+        run: |
+          echo 'Project found: ${{ steps.find_project.outputs.project-found }}'
 
       - name: Find both solution and project
         id: find_both
