@@ -22,10 +22,16 @@ function parseRegex(spec) {
 
 function run() {
   const expected = getEnv('INPUT_EXPECTED', true);
-  const actual = getEnv('INPUT_ACTUAL', true);
   const summaryFile = getEnv('INPUT_SUMMARY_FILE', true);
   const testName = getEnv('INPUT_TEST_NAME', true);
   const mode = (getEnv('INPUT_MODE').toLowerCase() || 'exact');
+  // Actual is optional for 'absent' mode (may be intentionally empty)
+  let actual = getEnv('INPUT_ACTUAL', mode !== 'absent');
+  if (mode !== 'absent' && (actual === undefined || actual === '')) {
+    // enforce presence for other modes
+    console.error('Missing required env var: INPUT_ACTUAL');
+    process.exit(1);
+  }
 
   console.log(`[ASSERT] ${testName} :: mode=${mode} expected='${expected}' actual='${actual}'`);
 

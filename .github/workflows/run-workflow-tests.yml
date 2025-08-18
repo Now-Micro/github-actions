@@ -1,4 +1,4 @@
-name: Run Github Action Tests
+name: Run  Tests
 on:
   workflow_dispatch:
 jobs:
