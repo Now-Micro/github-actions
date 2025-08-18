@@ -33,67 +33,9 @@ runs:
     - name: Find .sln or .csproj file
       id: find-file
       shell: bash
-      run: |
-        cat > find-sln-or-csproj.js <<'EOF'
-        const fs = require('fs');
-        const path = require('path');
-        let projectFound, solutionFound;
-
-        function walk(dir, maxDepth, findSolution, findProject, currentDepth = 0) {
-          console.log(`Searching in: ${dir}, Depth: ${currentDepth}, MaxDepth: ${maxDepth}, FindSolution: ${findSolution}, FindProject: ${findProject}`);
-          if (currentDepth > maxDepth) {
-            console.log(`Max depth of ${maxDepth} reached at ${dir}`);
-            return;
-          }
-          if (solutionFound && projectFound) {
-              return;
-          }
-          let entries;
-          try {
-            entries = fs.readdirSync(dir, { withFileTypes: true });
-          } catch {
-            console.error(`Cannot read directory: ${dir}`);
-            return;
-          }
-
-          for (const entry of entries) {
-            if (findSolution && entry.isFile() && entry.name.endsWith('.sln')) {
-              solutionFound = path.join(dir, entry.name);
-            }
-            if (findProject && entry.isFile() && entry.name.endsWith('.csproj')) {
-              projectFound = path.join(dir, entry.name);
-            }   
-            if (entry.isDirectory()) {
-              walk(path.join(dir, entry.name), maxDepth, findSolution, findProject, currentDepth + 1);
-            }         
-          }
-        }
-
-        const inputDir = `./${{ inputs.directory }}`;
-        const maxDepth = parseInt(${{ inputs.max-depth }} || '1', 10);
-        const findSolution = (`${{ inputs.find-solution }}` || 'true').toLowerCase() === 'true';
-        const findProject = (`${{ inputs.find-project }}` || 'false').toLowerCase() === 'true';
-        const githubOutput = process.env.GITHUB_OUTPUT;
-
-        console.log(`Input directory: ${inputDir}`);
-        console.log(`Max depth: ${maxDepth}`);
-        console.log(`Find solution: ${findSolution}`);
-        console.log(`Find project: ${findProject}`);
-        if (!inputDir) {
-          console.error('Input directory is required.');
-          process.exit(1);
-        }
-
-        console.log(`Searching for .sln or .csproj files in ${inputDir}...`);
-        walk(inputDir, maxDepth, findSolution, findProject);
-
-        console.log(`Project found: ${projectFound || 'None'}`);
-        console.log(`Solution found: ${solutionFound || 'None'}`);
-        if (solutionFound && solutionFound.endsWith('.sln')) {
-          fs.appendFileSync(githubOutput, `solution-found=${solutionFound}\n`);
-        } 
-        if (projectFound && projectFound.endsWith('.csproj')) {
-          fs.appendFileSync(githubOutput, `project-found=${projectFound}\n`);
-        }
-        EOF
-        node find-sln-or-csproj.js
+      run: node ./get-project-and-solution-files-from-directory/find-project-or-solution.js
+      env:
+        INPUT_DIRECTORY: ${{ inputs.directory }}
+        INPUT_MAX_DEPTH: ${{ inputs.max-depth }}
+        INPUT_FIND_SOLUTION: ${{ inputs.find-solution }}
+        INPUT_FIND_PROJECT: ${{ inputs.find-project }}

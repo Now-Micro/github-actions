@@ -1,0 +1,60 @@
+name: Example - Get Project and Solution Files
+on:
+  workflow_dispatch:
+
+jobs:
+  demo-locate-files:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: List demo tree
+        run: |
+          echo "Demo directory structure:" 
+          tree -a demo || find demo -maxdepth 4 -type f -printf '%P\n'
+
+      - name: Find solution only (default)
+        id: find_solution
+        uses: ./get-project-and-solution-files-from-directory
+        with:
+          directory: demo/get-project-and-solution-files-from-directory
+          # find-solution defaults to true
+          # find-project defaults to false
+
+      - name: Output solution path
+        run: echo 'Solution found: ${{ steps.find_solution.outputs.solution-found }}'
+
+      - name: Find project only
+        id: find_project
+        uses: ./get-project-and-solution-files-from-directory
+        with:
+          directory: demo/get-project-and-solution-files-from-directory
+          find-solution: 'false'
+          find-project: 'true'
+          max-depth: 4
+
+      - name: Output project path
+        run: echo 'Project found: ${{ steps.find_project.outputs.project-found }}'
+
+      - name: Find both solution and project
+        id: find_both
+        uses: ./get-project-and-solution-files-from-directory
+        with:
+          directory: demo/get-project-and-solution-files-from-directory
+          find-solution: 'true'
+          find-project: 'true'
+          max-depth: 4
+
+      - name: Output both
+        run: |
+          echo 'Solution: ${{ steps.find_both.outputs.solution-found }}'
+          echo 'Project: ${{ steps.find_both.outputs.project-found }}'
+
+      - name: Summary
+        run: |
+          echo "### Demo get-project-and-solution-files-from-directory" >> $GITHUB_STEP_SUMMARY
+          echo "Solution only: ${{ steps.find_solution.outputs.solution-found }}" >> $GITHUB_STEP_SUMMARY
+          echo "Project only: ${{ steps.find_project.outputs.project-found }}" >> $GITHUB_STEP_SUMMARY
+          echo "Both solution: ${{ steps.find_both.outputs.solution-found }}" >> $GITHUB_STEP_SUMMARY
+          echo "Both project: ${{ steps.find_both.outputs.project-found }}" >> $GITHUB_STEP_SUMMARY
