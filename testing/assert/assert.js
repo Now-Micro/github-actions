@@ -25,6 +25,7 @@ function run() {
   const summaryFile = getEnv('INPUT_SUMMARY_FILE', true);
   const testName = getEnv('INPUT_TEST_NAME', true);
   const mode = (getEnv('INPUT_MODE').toLowerCase() || 'exact');
+  const exitOnFail = (getEnv('INPUT_EXIT_ON_FAIL', 'false').toLowerCase() === 'true');
   // Actual is optional for 'absent' mode (may be intentionally empty)
   let actual = getEnv('INPUT_ACTUAL', mode !== 'absent');
   if (mode !== 'absent' && (actual === undefined || actual === '')) {
@@ -60,7 +61,9 @@ function run() {
     const failLine = `FAIL: ${testName} (expected '${expected}' mode=${mode} actual='${actual}')`;
     fs.appendFileSync(summaryFile, failLine + '\n');
     console.error(failLine);
-    process.exit(1);
+    if (exitOnFail) {
+      process.exit(1);
+    }
   }
 
   fs.appendFileSync(summaryFile, `PASS: ${testName}\n`);

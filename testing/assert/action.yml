@@ -1,22 +1,26 @@
 name: Assert
 description: Make assertions in GitHub Actions workflows to mimic test frameworks.
 inputs:
-  expected:
-    description: "The expected value (string or regex suffix)."
-    required: true
   actual:
     description: "The actual value to compare against the expected value"
     required: true
+  exit-on-fail:
+    description: "Exit with code 1 if the assertion fails"
+    required: false
+    default: "false"
+  expected:
+    description: "The expected value (string or regex suffix)."
+    required: true
+  mode:
+    description: "Comparison mode: exact | endswith | present | absent | regex"
+    required: false
+    default: "exact"
   summary-file:
     description: "Path to the summary file where results will be logged"
     required: true
   test-name:
     description: "Name of the test for summary output"
     required: true
-  mode:
-    description: "Comparison mode: exact | endswith | present | absent | regex"
-    required: false
-    default: "exact"
 
 runs:
   using: 'composite'
@@ -28,9 +32,10 @@ runs:
       shell: bash
       run: node ./testing/assert/assert.js
       env:
-        INPUT_EXPECTED: ${{ inputs.expected }}
         INPUT_ACTUAL: ${{ inputs.actual }}
-        INPUT_SUMMARY_FILE: ${{ inputs.summary-file }}
-        INPUT_TEST_NAME: ${{ inputs.test-name }}
+        INPUT_EXIT_ON_FAIL: ${{ inputs.exit-on-fail }}
+        INPUT_EXPECTED: ${{ inputs.expected }}
         INPUT_MODE: ${{ inputs.mode }}
         INPUT_PARTIAL_MATCH_ALLOWED: ${{ inputs.partial-match-allowed }}
+        INPUT_SUMMARY_FILE: ${{ inputs.summary-file }}
+        INPUT_TEST_NAME: ${{ inputs.test-name }}
