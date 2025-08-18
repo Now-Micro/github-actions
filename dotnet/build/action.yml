@@ -64,6 +64,7 @@ runs:
         cache-dependency-path: ${{ inputs.npm-cache-dependency-path }}
 
     - name: Configure Github NuGet source
+      if: inputs.github-packages-token != ''
       uses: ./nuget/configure-source
       with:
         name: 'CodeBits'
@@ -72,6 +73,7 @@ runs:
         username: ${{ github.actor }}
 
     - name: Configure Azure DevOps source
+      if: inputs.azure-devops-password != ''
       uses: ./nuget/configure-source
       with:
         name: 'Code-Hole'
