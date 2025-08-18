@@ -3,4 +3,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Service\Service.csproj" />
+  </ItemGroup>
 </Project>
