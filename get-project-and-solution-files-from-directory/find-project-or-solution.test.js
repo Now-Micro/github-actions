@@ -1,118 +1,269 @@
+// Comprehensive tests for find-project-or-solution.js
+// Covers BFS shallow preference, DFS legacy walk, depth limiting, error paths, debug logging, and output writing.
+
+const test = require('node:test');
+const assert = require('node:assert');
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
-const assert = require('assert');
-const { test, beforeEach, afterEach } = require('node:test');
-const { run } = require('./find-project-or-solution');
+const os = require('os');
 
-function setupDir(structure) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'proj-soln-'));
-  for (const [rel, content] of Object.entries(structure)) {
-    const full = path.join(root, rel);
-    fs.mkdirSync(path.dirname(full), { recursive: true });
-    fs.writeFileSync(full, content || '');
-  }
-  return root;
+const SCRIPT_PATH = path.join(__dirname, 'find-project-or-solution.js');
+const mod = require('./find-project-or-solution.js');
+
+// Utility: create temp directory
+function makeTempDir(prefix = 'finder-test-') {
+  return fs.mkdtempSync(path.join(os.tmpdir(), prefix));
 }
 
-function captureRun(env) {
-  const logs = [];
-  const origLog = console.log;
-  const origError = console.error;
-  console.log = (...a) => logs.push(a.join(' '));
-  console.error = (...a) => logs.push(a.join(' '));
+// Utility: capture stdout/stderr during a function
+function capture(fn) {
+  const logs = { out: '', err: '' };
+  const origOut = process.stdout.write;
+  const origErr = process.stderr.write;
+  process.stdout.write = (chunk, enc, cb) => { logs.out += chunk; return true; };
+  process.stderr.write = (chunk, enc, cb) => { logs.err += chunk; return true; };
+  try { fn(); } finally { process.stdout.write = origOut; process.stderr.write = origErr; }
+  return logs;
+}
 
-  const outputFile = path.join(os.tmpdir(), `gh-out-${Date.now()}-${Math.random()}.txt`);
-  const originalEnv = { ...process.env };
-  process.env.GITHUB_OUTPUT = outputFile;
-  Object.entries(env).forEach(([k,v]) => process.env[k] = v);
-
+// Utility: run script run() with env overrides, capturing output
+function runWithEnv(env) {
+  const prev = { ...process.env };
+  Object.keys(process.env).filter(k => k.startsWith('INPUT_')).forEach(k => delete process.env[k]);
+  const provided = env || {};
+  Object.entries(provided).forEach(([k,v]) => process.env[k] = v);
+  const hadGithubOutputKey = Object.prototype.hasOwnProperty.call(provided, 'GITHUB_OUTPUT');
+  if (hadGithubOutputKey) {
+    if (provided.GITHUB_OUTPUT === '__UNSET__' || provided.GITHUB_OUTPUT === '') {
+      delete process.env.GITHUB_OUTPUT; // simulate missing
+    }
+  }
+  let outputFile;
+  if (!hadGithubOutputKey) { // only auto-create when not explicitly provided
+    outputFile = fs.mkdtempSync(path.join(os.tmpdir(), 'github-output-')) + '/out.txt';
+    fs.writeFileSync(outputFile, '');
+    process.env.GITHUB_OUTPUT = outputFile;
+  }
+  let exitCode;
   const origExit = process.exit;
-  let exitCode = null;
-  process.exit = (code) => { exitCode = code; throw new Error(`__exit_${code}__`); };
-
+  process.exit = (code) => { exitCode = code; throw new Error(`process.exit:${code}`); };
+  const logs = { out: '', err: '' };
+  const origOut = process.stdout.write;
+  const origErr = process.stderr.write;
+  process.stdout.write = (chunk, enc, cb) => { logs.out += chunk; return true; };
+  process.stderr.write = (chunk, enc, cb) => { logs.err += chunk; return true; };
+  let errorObj;
   try {
-    run();
+    mod.run();
+    exitCode = exitCode === undefined ? 0 : exitCode;
   } catch (e) {
-    if (!/__exit_/.test(e.message)) throw e;
+    if (/^process.exit:/.test(e.message)) {
+      // process.exit path; exitCode already set
+    } else {
+      errorObj = e;
+    }
   } finally {
-    console.log = origLog;
-    console.error = origError;
+    process.stdout.write = origOut;
+    process.stderr.write = origErr;
     process.exit = origExit;
-    Object.keys(process.env).forEach(k => { if (!(k in originalEnv)) delete process.env[k]; });
-    Object.entries(originalEnv).forEach(([k,v]) => process.env[k] = v);
+    Object.keys(process.env).forEach(k => { if (!(k in prev)) delete process.env[k]; });
+    Object.entries(prev).forEach(([k,v]) => process.env[k] = v);
   }
-
-  const output = fs.existsSync(outputFile) ? fs.readFileSync(outputFile, 'utf8') : '';
-  return { logs, output, exitCode };
+  const outPath = hadGithubOutputKey ? process.env.GITHUB_OUTPUT : outputFile;
+  let outputContent = '';
+  if (outPath && fs.existsSync(outPath) && fs.statSync(outPath).isFile()) {
+    outputContent = fs.readFileSync(outPath, 'utf8');
+  }
+  return { logs, exitCode, outputContent, errorObj, outputFile: outPath };
 }
 
-let root;
+// 1. Basic both solution + project found, BFS prefers shallow project.
+test('BFS finds shallow solution and project first', () => {
+  const dir = makeTempDir();
+  const shallowProj = path.join(dir, 'AppA.csproj');
+  const solution = path.join(dir, 'Sample.sln');
+  fs.writeFileSync(shallowProj, '<Project></Project>');
+  fs.writeFileSync(solution, 'Microsoft Visual Studio Solution File');
+  const deepDir = path.join(dir, 'deep', 'nest');
+  fs.mkdirSync(deepDir, { recursive: true });
+  const deepProj = path.join(deepDir, 'Deep.csproj');
+  fs.writeFileSync(deepProj, '<Project></Project>');
 
-beforeEach(() => {
-  root = null;
-});
-
-afterEach(() => {
-  if (root && fs.existsSync(root)) {
-    fs.rmSync(root, { recursive: true, force: true });
-  }
-});
-
-test('finds solution and project within depth', () => {
-  root = setupDir({
-    'src/ProjectA/ProjectA.csproj': '<Project></Project>',
-    'src/ProjectA/ProjectA.sln': '',
-  });
-  const { output } = captureRun({
-    INPUT_DIRECTORY: root,
-    INPUT_MAX_DEPTH: '4',
+  const { logs, exitCode, outputContent } = runWithEnv({
+    INPUT_DIRECTORY: dir,
+    INPUT_MAX_DEPTH: '5',
     INPUT_FIND_SOLUTION: 'true',
-    INPUT_FIND_PROJECT: 'true'
+    INPUT_FIND_PROJECT: 'true',
+    INPUT_DEBUG_MODE: 'false'
   });
-  assert.match(output, /solution-found=.*ProjectA\.sln/);
-  assert.match(output, /project-found=.*ProjectA\.csproj/);
+  assert.strictEqual(exitCode, 0);
+  assert.match(logs.out, /Found project: .*AppA.csproj/); // shallow
+  assert.match(logs.out, /Found solution: .*Sample.sln/);
+  assert.match(outputContent, /solution-found=.*Sample.sln/);
+  assert.match(outputContent, /project-found=.*AppA.csproj/);
+  assert.doesNotMatch(logs.out, /Deep.csproj/); // deep project not chosen first
 });
 
-test('respects max depth (does not find deeper)', () => {
-  root = setupDir({ 'deep/one/two/three/file.sln': '' });
-  const { output } = captureRun({
-    INPUT_DIRECTORY: root,
-    INPUT_MAX_DEPTH: '2',
+// 2. Only solution search
+test('Only solution search writes only solution output', () => {
+  const dir = makeTempDir();
+  const solution = path.join(dir, 'Only.sln');
+  fs.writeFileSync(solution, 'Solution');
+  const { exitCode, outputContent } = runWithEnv({
+    INPUT_DIRECTORY: dir,
+    INPUT_MAX_DEPTH: '1',
     INPUT_FIND_SOLUTION: 'true',
     INPUT_FIND_PROJECT: 'false'
   });
-  assert.ok(!/solution-found=/.test(output));
+  assert.strictEqual(exitCode, 0);
+  assert.match(outputContent, /solution-found=.*Only.sln/);
+  assert.ok(!/project-found=/.test(outputContent));
 });
 
-test('errors when directory missing', () => {
-  const { exitCode } = captureRun({
-    INPUT_DIRECTORY: '',
-    INPUT_MAX_DEPTH: '1'
-  });
-  assert.strictEqual(exitCode, 1);
-});
-
-test('finds only project when solution disabled', () => {
-  root = setupDir({ 'proj/app.csproj': '<Project></Project>' });
-  const { output } = captureRun({
-    INPUT_DIRECTORY: root,
-    INPUT_MAX_DEPTH: '3',
+// 3. Only project search
+test('Only project search writes only project output', () => {
+  const dir = makeTempDir();
+  const proj = path.join(dir, 'Only.csproj');
+  fs.writeFileSync(proj, '<Project></Project>');
+  const { exitCode, outputContent } = runWithEnv({
+    INPUT_DIRECTORY: dir,
+    INPUT_MAX_DEPTH: '1',
     INPUT_FIND_SOLUTION: 'false',
     INPUT_FIND_PROJECT: 'true'
   });
-  assert.ok(/project-found=.*app\.csproj/.test(output));
-  assert.ok(!/solution-found=/.test(output));
+  assert.strictEqual(exitCode, 0);
+  assert.match(outputContent, /project-found=.*Only.csproj/);
+  assert.ok(!/solution-found=/.test(outputContent));
 });
 
-test('finds only solution when project disabled', () => {
-  root = setupDir({ 'proj/app.sln': '' });
-  const { output } = captureRun({
-    INPUT_DIRECTORY: root,
-    INPUT_MAX_DEPTH: '3',
+// 4. None found scenario (empty directory)
+test('No files found results in no outputs written', () => {
+  const dir = makeTempDir();
+  const { exitCode, outputContent, logs } = runWithEnv({
+    INPUT_DIRECTORY: dir,
+    INPUT_MAX_DEPTH: '2',
     INPUT_FIND_SOLUTION: 'true',
-    INPUT_FIND_PROJECT: 'false'
+    INPUT_FIND_PROJECT: 'true'
   });
-  assert.ok(/solution-found=.*app\.sln/.test(output));
-  assert.ok(!/project-found=/.test(output));
+  assert.strictEqual(exitCode, 0);
+  assert.strictEqual(outputContent.trim(), '');
+  assert.match(logs.out, /Project found: None/);
+  assert.match(logs.out, /Solution found: None/);
+});
+
+// 5. Depth limit prevents detection
+test('Depth limit prevents deeper discovery', () => {
+  const dir = makeTempDir();
+  const sub = path.join(dir, 'sub');
+  fs.mkdirSync(sub);
+  fs.writeFileSync(path.join(sub, 'Deep.sln'), 'Solution');
+  const { exitCode, outputContent, logs } = runWithEnv({
+    INPUT_DIRECTORY: dir,
+    INPUT_MAX_DEPTH: '0', // only root searched
+    INPUT_FIND_SOLUTION: 'true',
+    INPUT_FIND_PROJECT: 'true'
+  });
+  assert.strictEqual(exitCode, 0);
+  assert.strictEqual(outputContent.trim(), '');
+  assert.match(logs.out, /Searching for .sln or .csproj/);
+});
+
+// 6. Missing directory error
+test('Missing directory triggers exit 1', () => {
+  const missing = path.join(os.tmpdir(), 'definitely-missing-dir-' + Date.now());
+  const { exitCode, logs } = runWithEnv({
+    INPUT_DIRECTORY: missing,
+    INPUT_MAX_DEPTH: '1',
+    INPUT_FIND_SOLUTION: 'true',
+    INPUT_FIND_PROJECT: 'true'
+  });
+  assert.strictEqual(exitCode, 1);
+  assert.match(logs.err + logs.out, /does not exist or is not a directory/);
+});
+
+// 7. Blank directory input error
+test('Blank directory input triggers required error', () => {
+  const { exitCode, logs } = runWithEnv({
+    INPUT_DIRECTORY: '',
+    INPUT_MAX_DEPTH: '1',
+    INPUT_FIND_SOLUTION: 'true',
+    INPUT_FIND_PROJECT: 'true'
+  });
+  assert.strictEqual(exitCode, 1);
+  assert.match(logs.err + logs.out, /Input directory is required/);
+});
+
+// 8. GITHUB_OUTPUT not set -> exit 1
+test('Missing GITHUB_OUTPUT causes exit 1', () => {
+  const dir = makeTempDir();
+  fs.writeFileSync(path.join(dir, 'X.csproj'), '<Project></Project>');
+  const { exitCode, logs } = runWithEnv({
+    INPUT_DIRECTORY: dir,
+    INPUT_MAX_DEPTH: '1',
+    INPUT_FIND_SOLUTION: 'false',
+    INPUT_FIND_PROJECT: 'true',
+    GITHUB_OUTPUT: '__UNSET__' // signal helper to NOT create a file & simulate missing
+  });
+  assert.strictEqual(exitCode, 1);
+  assert.match(logs.err + logs.out, /GITHUB_OUTPUT not set/);
+});
+
+// 9. Debug mode logs
+test('Debug mode emits [DEBUG] lines', () => {
+  const dir = makeTempDir();
+  fs.writeFileSync(path.join(dir, 'Y.csproj'), '<Project></Project>');
+  const { logs, exitCode } = runWithEnv({
+    INPUT_DIRECTORY: dir,
+    INPUT_MAX_DEPTH: '2',
+    INPUT_FIND_SOLUTION: 'false',
+    INPUT_FIND_PROJECT: 'true',
+    INPUT_DEBUG_MODE: 'true'
+  });
+  assert.strictEqual(exitCode, 0);
+  assert.match(logs.out, /\[DEBUG]/);
+});
+
+// 10. BFS handles unreadable subdirectory gracefully
+test('BFS continues after unreadable subdirectory', () => {
+  const dir = makeTempDir();
+  const blocked = path.join(dir, 'blocked');
+  const ok = path.join(dir, 'ok');
+  fs.mkdirSync(blocked);
+  fs.mkdirSync(ok);
+  fs.writeFileSync(path.join(ok, 'Z.csproj'), '<Project></Project>');
+  const orig = fs.readdirSync;
+  let threw = false;
+  fs.readdirSync = function(p, opts) { if (p === blocked) { threw = true; throw new Error('EACCES'); } return orig(p, opts); };
+  const { logs, exitCode } = runWithEnv({
+    INPUT_DIRECTORY: dir,
+    INPUT_MAX_DEPTH: '2',
+    INPUT_FIND_SOLUTION: 'false',
+    INPUT_FIND_PROJECT: 'true'
+  });
+  fs.readdirSync = orig;
+  assert.ok(threw, 'Mock should have thrown');
+  assert.strictEqual(exitCode, 0); // still success because write outputs
+  assert.match(logs.err + logs.out, /Cannot read directory: .*blocked/);
+});
+
+// 11. Legacy DFS walk coverage
+test('Legacy DFS walk finds files (coverage)', () => {
+  const dir = makeTempDir();
+  fs.writeFileSync(path.join(dir, 'Legacy.sln'), 'Solution');
+  fs.writeFileSync(path.join(dir, 'Legacy.csproj'), '<Project></Project>');
+  // Capture output during walk
+  const logs = capture(() => mod.walk(dir, 1, true, true));
+  assert.match(logs.out, /Found solution: .*Legacy.sln/);
+  assert.match(logs.out, /Found project: .*Legacy.csproj/);
+});
+
+// 12. DFS walk respects maxDepth early exit
+test('DFS walk maxDepth prevents deeper scanning', () => {
+  const dir = makeTempDir();
+  const deep = path.join(dir, 'deep');
+  fs.mkdirSync(deep);
+  fs.writeFileSync(path.join(deep, 'DeepOnly.csproj'), '<Project></Project>');
+  const logs = capture(() => mod.walk(dir, 0, false, true));
+  // Should not find project because depth starts at 0 and > maxDepth avoided but recursion not entered
+  assert.doesNotMatch(logs.out, /Found project/);
 });
