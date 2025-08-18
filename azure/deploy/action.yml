@@ -1,0 +1,100 @@
+name: Deploy application
+description: "Deploys the DICE application to Azure Web Apps"
+inputs:
+  app-name:
+    description: "Name of the Azure Web App"
+    required: true
+  artifact-name:
+    description: "Name of the build artifact to download"
+    required: true
+  aspnet-environment:
+    description: "ASP.NET Core environment (Development/Staging/Production)"
+    required: true
+  azure-client-id:
+    description: "Azure Client ID for authentication"
+    required: true
+  azure-subscription-id:
+    description: "Azure Subscription ID for authentication"
+    required: true
+  azure-tenant-id:
+    description: "Azure Tenant ID for authentication"
+    required: true
+  path-to-package:
+    description: "Path to the package to deploy (relative to the artifact e.g., 'Modules/NowMicro.Dice.AssetManagement/host/NowMicro.Dice.AssetManagement.HttpApi.Host/bin/Release/net6.0/publish/')"
+    required: true
+  show-debug-info:
+    description: "Show debug information for troubleshooting"
+    required: false
+    default: 'false'
+  slot-name:
+    description: "Deployment slot name"
+    required: false
+    default: ""
+  resource-group-name:
+    description: "Azure Resource Group name"
+    required: true
+  
+runs:
+  using: "composite"
+  steps:
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: ./${{ inputs.artifact-name }}
+    
+    - name: Log stuff
+      if: ${{ inputs.show-debug-info == 'true' }}
+      shell: bash
+      run: |
+        echo "Path to package: ./${{ inputs.artifact-name }}/${{ inputs.path-to-package }}"
+        echo "App name: ${{ inputs.app-name }}"
+        echo "Artifact name: ${{ inputs.artifact-name }}"
+        echo "ASP.NET environment: ${{ inputs.aspnet-environment }}"
+        echo "Resource group name: ${{ inputs.resource-group-name }}"
+        echo "Slot name: ${{ inputs.slot-name }}"
+        echo "Current directory contents:"
+        echo "===================="
+        ls -la
+        echo "====================="
+        echo "Checking artifact directory:"
+        if [ -d ./${{ inputs.artifact-name }} ]; then
+          echo "Artifact directory exists, listing contents:"
+          ls -la ./${{ inputs.artifact-name }}/
+          echo "Looking for package at: ./${{ inputs.artifact-name }}/${{ inputs.path-to-package }}"
+          if [ -d ./${{ inputs.artifact-name }}/${{ inputs.path-to-package }} ]; then
+            echo "Package directory found! Contents:"
+            ls -la ./${{ inputs.artifact-name }}/${{ inputs.path-to-package }}
+          else
+            echo "Package directory NOT found. Searching for similar paths..."
+            find ./${{ inputs.artifact-name }} -name "publish" -type d 2>/dev/null | head -5 || echo "No publish directories found"
+          fi
+        else
+          echo "Artifact directory ./${{ inputs.artifact-name }} does not exist!"
+        fi
+
+    - name: Azure login
+      uses: azure/login@v2
+      with:
+        client-id: ${{ inputs.azure-client-id }}
+        tenant-id: ${{ inputs.azure-tenant-id }}
+        subscription-id: ${{ inputs.azure-subscription-id }}
+
+    - name: Configure ASP.NET Core Environment
+      uses: ./.github/actions/azure/configure-aspnetcore-environment
+      with:
+        app-name: ${{ inputs.app-name }}
+        aspnet-environment: ${{ inputs.aspnet-environment }}
+        resource-group-name: ${{ inputs.resource-group-name }}
+
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: ${{ inputs.app-name }}
+        package: ./${{ inputs.artifact-name }}/${{ inputs.path-to-package }}
+        slot-name: ${{ inputs.slot-name }}
+
+    - name: Azure logout
+      shell: bash
+      run: |
+        az logout
