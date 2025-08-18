@@ -12,7 +12,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: ./.github/actions/setup-node
+        uses: ./setup-node
 
       - name: Run action tests with coverage
         shell: bash

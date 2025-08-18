@@ -28,7 +28,7 @@ runs:
   using: "composite"
   steps:
     - name: Setup Node.js
-      uses: ./.github/actions/setup-node
+      uses: ./setup-node
 
     - name: Find .sln or .csproj file
       id: find-file
