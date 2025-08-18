@@ -18,7 +18,54 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo "Running Node tests in with coverage"
+          echo "Running Node tests with coverage"
           node --version
-          # Generates text and lcov coverage reports
-          npx --yes c8 -r text -r lcov node --test
+          # Run tests, capture output
+          npx --yes c8 -r text -r lcov node --test 2>&1 | tee test-output.txt
+
+      - name: Summarize results
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "### Node Test Summary" >> "$GITHUB_STEP_SUMMARY"
+          if [ ! -f test-output.txt ]; then
+            echo "Test output file missing" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          total_tests=$(grep -E 'ℹ tests ' test-output.txt | awk '{print $2}' | tail -1 || echo 0)
+          total_pass=$(grep -o '^✔ ' test-output.txt | wc -l || true)
+          total_fail=$(grep -o '^✖ ' test-output.txt | wc -l || true)
+          # Fallback: if symbols not matched, derive from summary lines
+          if [ "$total_pass" -eq 0 ] && [ "$total_fail" -eq 0 ]; then
+            pass_line=$(grep -E 'ℹ pass ' test-output.txt | tail -1 | awk '{print $2}') || true
+            fail_line=$(grep -E 'ℹ fail ' test-output.txt | tail -1 | awk '{print $2}') || true
+            total_pass=${pass_line:-0}
+            total_fail=${fail_line:-0}
+          fi
+          echo "* Total tests: $total_tests" >> "$GITHUB_STEP_SUMMARY"
+          echo "* Passed: $total_pass" >> "$GITHUB_STEP_SUMMARY"
+          echo "* Failed: $total_fail" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "#### Coverage (All files)" >> "$GITHUB_STEP_SUMMARY"
+          cov_line=$(grep -E '^All files' -A1 test-output.txt | tail -1 || true)
+          if [ -n "$cov_line" ]; then
+            echo '\n``' >> "$GITHUB_STEP_SUMMARY"
+            echo "$cov_line" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Coverage summary not found" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ "$total_fail" -gt 0 ]; then
+            echo "\n#### Failing Test Snippets" >> "$GITHUB_STEP_SUMMARY"
+            awk 'BEGIN{p=0} /^✖ /{print; p=1; next} /^✔ /{p=0} {if(p) print}' test-output.txt | sed -n '1,400p' >> "$GITHUB_STEP_SUMMARY" || true
+          fi
+
+      - name: Upload lcov report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-lcov
+          path: lcov.info
+          if-no-files-found: ignore
+          retention-days: 1
