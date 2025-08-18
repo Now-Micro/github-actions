@@ -1,3 +1,4 @@
+- need to revert commit on this pr: https://github.com/Now-Micro/CodeBits/pull/57
 - refactor and add test + workflow: 
     -get-unique-root-directores
     -get-changed-directories
