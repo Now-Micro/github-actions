@@ -1,0 +1,23 @@
+name: Run Github Action Tests
+on:
+  workflow_dispatch:
+jobs:
+  run-tests:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+        with:
+          # Fetch full history so that before and after commits exist locally
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: ./.github/actions/setup-node
+
+      - name: Run action tests with coverage
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Running Node tests in .github with coverage"
+          node --version
+          npx --yes c8 -r text -r lcov node --test .github        

@@ -1,0 +1,32 @@
+name: 'Get Changed Project Directories'
+description: 'Detects changed .NET project directories and returns them as a JSON array'
+author: 'Trafera'
+
+inputs:
+  head-ref:
+    description: 'The head branch of the pull request'
+    required: false
+    default: ${{ github.head_ref }}
+  base-ref:
+    description: 'The base branch of the pull request'
+    required: false
+    default: ${{ github.base_ref }}
+
+outputs:
+  changed_files:
+    description: 'JSON array of changed files'
+    value: ${{ steps.parse-changes.outputs.changed_files }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: ./.github/actions/setup-node
+
+    - name: Determine changed project directories
+      id: parse-changes
+      shell: bash
+      run: node ./get-changed-files/get-changed-files.js      
+      env:
+        INPUT_HEAD_REF: ${{ inputs.head-ref }}
+        INPUT_BASE_REF: ${{ inputs.base-ref }}

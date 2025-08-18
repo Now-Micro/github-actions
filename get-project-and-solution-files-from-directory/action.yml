@@ -1,31 +1,31 @@
-name: 'Get Solution or Project File from Directory'
-description: 'Finds the first .sln or .csproj file in a given directory and outputs its path.'
-inputs: 
+name: "Get Solution or Project File from Directory"
+description: "Finds the first .sln or .csproj file in a given directory and outputs its path."
+inputs:
   directory:
-    description: 'The directory to search for a .sln or .csproj file.'
+    description: "The directory to search for a .sln or .csproj file."
     required: true
   find-project:
-    description: 'Whether to find a .csproj file.'
+    description: "Whether to find a .csproj file."
     required: false
-    default: 'false'
+    default: "false"
   find-solution:
-    description: 'Whether to find a .sln file.'
+    description: "Whether to find a .sln file."
     required: false
-    default: 'true'
+    default: "true"
   max-depth:
-    description: 'Maximum depth to search for .sln or .csproj files.'
+    description: "Maximum depth to search for .sln or .csproj files."
     required: false
-    default: '1'
-  
+    default: "1"
+
 outputs:
   project-found:
-    description: 'The path to the first .csproj file found in the directory or its subdirectories.'
+    description: "The path to the first .csproj file found in the directory or its subdirectories."
     value: ${{ steps.find-file.outputs.project-found }}
   solution-found:
-    description: 'The path to the first .sln file found in the directory or its subdirectories.'
+    description: "The path to the first .sln file found in the directory or its subdirectories."
     value: ${{ steps.find-file.outputs.solution-found }}
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Setup Node.js
       uses: ./.github/actions/setup-node
@@ -40,7 +40,11 @@ runs:
         let projectFound, solutionFound;
 
         function walk(dir, maxDepth, findSolution, findProject, currentDepth = 0) {
-          if (currentDepth > maxDepth) return;
+          console.log(`Searching in: ${dir}, Depth: ${currentDepth}, MaxDepth: ${maxDepth}, FindSolution: ${findSolution}, FindProject: ${findProject}`);
+          if (currentDepth > maxDepth) {
+            console.log(`Max depth of ${maxDepth} reached at ${dir}`);
+            return;
+          }
           if (solutionFound && projectFound) {
               return;
           }
@@ -48,25 +52,21 @@ runs:
           try {
             entries = fs.readdirSync(dir, { withFileTypes: true });
           } catch {
+            console.error(`Cannot read directory: ${dir}`);
             return;
           }
+
           for (const entry of entries) {
-            if (!entry.isFile()) continue;
-            if (findSolution && entry.name.endsWith('.sln')) {
+            if (findSolution && entry.isFile() && entry.name.endsWith('.sln')) {
               solutionFound = path.join(dir, entry.name);
             }
-            if (findProject && entry.name.endsWith('.csproj')) {
+            if (findProject && entry.isFile() && entry.name.endsWith('.csproj')) {
               projectFound = path.join(dir, entry.name);
-            }            
-          }
-          // Recurse into subdirectories
-          for (const entry of entries) {
+            }   
             if (entry.isDirectory()) {
               walk(path.join(dir, entry.name), maxDepth, findSolution, findProject, currentDepth + 1);
-              return;
-            }
+            }         
           }
-          return;
         }
 
         const inputDir = `./${{ inputs.directory }}`;
@@ -86,7 +86,7 @@ runs:
 
         console.log(`Searching for .sln or .csproj files in ${inputDir}...`);
         walk(inputDir, maxDepth, findSolution, findProject);
-       
+
         console.log(`Project found: ${projectFound || 'None'}`);
         console.log(`Solution found: ${solutionFound || 'None'}`);
         if (solutionFound && solutionFound.endsWith('.sln')) {
