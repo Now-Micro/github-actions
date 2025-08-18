@@ -1,0 +1,50 @@
+name: 'Get Unique Root Directories'
+description: 'Detects unique root directories from changed files and returns them as a JSON array'
+author: 'Trafera'
+inputs: 
+  pattern:
+    description: 'Regular expression used to determine which file names should be used for generating unique root directories.'
+    required: true
+  paths:
+    description: 'Comma-separated list of paths'
+    required: true
+
+outputs:
+  unique_root_directories:
+    description: 'JSON array of unique root directories'
+    value: ${{ steps.parse-changes.outputs.unique_root_directories }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: ./.github/actions/setup-node
+
+    - name: Determine changed project directories
+      id: parse-changes
+      shell: bash
+      run: |
+        cat > unique-root-directories.js << 'EOF'
+        const { execSync } = require('child_process');
+        const fs = require('fs');
+        const path = require('path');
+        const inputPattern = process.env.INPUT_PATTERN;
+        const directories = process.env.INPUT_PATHS.split(',').map(path => path.replace(/["']/g, '')).filter(Boolean);
+        console.log(`🔍 Getting Unique Root Directories from: ${process.env.INPUT_PATHS}`);
+        console.log(`Using pattern: ${inputPattern}`);
+        const uniqueRootDirectories = Array.from(new Set(directories.map(dir => {
+          const match = dir.match(new RegExp(inputPattern));
+          if (match) {
+            console.log(`🔍 Unique Root Directory found: '${match[1]}'`);
+          }
+          return match ? match[1] : null;
+        }))).filter(Boolean);
+
+        const json = JSON.stringify(uniqueRootDirectories);
+        console.log(`🔍 Unique Root Directories: ${json}`);
+        fs.appendFileSync(process.env.GITHUB_OUTPUT, `unique_root_directories=${json}\n`);
+        EOF
+        node unique-root-directories.js
+      env:
+        INPUT_PATHS: ${{ inputs.paths }}
+        INPUT_PATTERN: ${{ inputs.pattern }}
