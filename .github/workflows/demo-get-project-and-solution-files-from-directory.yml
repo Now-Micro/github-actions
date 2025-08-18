@@ -12,22 +12,38 @@ jobs:
       - name: List demo tree
         run: |
           echo "Demo directory structure:" 
-          tree -a demo || find demo -maxdepth 4 -type f -printf '%P\n'
+          find demo/get-project-and-solution-files-from-directory -maxdepth 8 -print
 
-      - name: Find solution only (default)
-        id: find_solution
+      # Scenario 1: Find only root solution (SampleSolution.sln) with shallow depth
+      - name: Find root solution only (depth 1)
+        id: root_solution
         uses: ./get-project-and-solution-files-from-directory
         with:
           directory: demo/get-project-and-solution-files-from-directory
-          # find-solution defaults to true
-          # find-project defaults to false
+          max-depth: 1
+          # defaults: find-solution true, find-project false
 
-      - name: Output solution path
+      - name: Output root solution
         run: |
-          echo 'Solution found: ${{ steps.find_solution.outputs.solution-found }}'
+          echo 'Root solution: ${{ steps.root_solution.outputs.solution-found }}'
 
-      - name: Find project only
-        id: find_project
+      # Scenario 2: Attempt to find a project with insufficient depth (expect none)
+      - name: Find project (too shallow depth)
+        id: project_shallow
+        uses: ./get-project-and-solution-files-from-directory
+        with:
+          directory: demo/get-project-and-solution-files-from-directory
+          find-solution: 'false'
+          find-project: 'true'
+          max-depth: 2 # Not deep enough to reach AppA/AppA.csproj (depth 3)
+
+      - name: Output shallow project result
+        run: |
+          echo 'Shallow search project: ${{ steps.project_shallow.outputs.project-found }}'
+
+      # Scenario 3: Find first project with sufficient depth (should find AppA.csproj)
+      - name: Find project (sufficient depth)
+        id: project_appa
         uses: ./get-project-and-solution-files-from-directory
         with:
           directory: demo/get-project-and-solution-files-from-directory
@@ -35,28 +51,45 @@ jobs:
           find-project: 'true'
           max-depth: 4
 
-      - name: Output project path
+      - name: Output project (AppA expected)
         run: |
-          echo 'Project found: ${{ steps.find_project.outputs.project-found }}'
+          echo 'First project (expected AppA.csproj): ${{ steps.project_appa.outputs.project-found }}'
 
-      - name: Find both solution and project
-        id: find_both
+      # Scenario 4: Find both solution and project starting inside SolutionB
+      - name: Find solution & project in SolutionB
+        id: solutionb
         uses: ./get-project-and-solution-files-from-directory
         with:
-          directory: demo/get-project-and-solution-files-from-directory
+          directory: demo/get-project-and-solution-files-from-directory/SolutionB
           find-solution: 'true'
           find-project: 'true'
           max-depth: 4
 
-      - name: Output both
+      - name: Output SolutionB results
         run: |
-          echo 'Solution: ${{ steps.find_both.outputs.solution-found }}'
-          echo 'Project: ${{ steps.find_both.outputs.project-found }}'
+          echo 'SolutionB solution: ${{ steps.solutionb.outputs.solution-found }}'
+          echo 'SolutionB first project: ${{ steps.solutionb.outputs.project-found }}'
+
+      # Scenario 5: Deep nested project (ThisShouldNotBeFound.csproj) reached only with high depth
+      - name: Deep nested search (high depth)
+        id: deep_nested
+        uses: ./get-project-and-solution-files-from-directory
+        with:
+          directory: demo/get-project-and-solution-files-from-directory
+          find-solution: 'false'
+          find-project: 'true'
+          max-depth: 15
+
+      - name: Output deep nested project (may differ if earlier project found first)
+        run: |
+          echo 'Deep nested search first project found: ${{ steps.deep_nested.outputs.project-found }}'
 
       - name: Summary
         run: |
           echo "### Demo get-project-and-solution-files-from-directory" >> $GITHUB_STEP_SUMMARY
-          echo "Solution only: ${{ steps.find_solution.outputs.solution-found }}" >> $GITHUB_STEP_SUMMARY
-          echo "Project only: ${{ steps.find_project.outputs.project-found }}" >> $GITHUB_STEP_SUMMARY
-          echo "Both solution: ${{ steps.find_both.outputs.solution-found }}" >> $GITHUB_STEP_SUMMARY
-          echo "Both project: ${{ steps.find_both.outputs.project-found }}" >> $GITHUB_STEP_SUMMARY
+          echo "Root solution depth1: ${{ steps.root_solution.outputs.solution-found }}" >> $GITHUB_STEP_SUMMARY
+          echo "Shallow project (expect empty): ${{ steps.project_shallow.outputs.project-found }}" >> $GITHUB_STEP_SUMMARY
+          echo "Project with depth4: ${{ steps.project_appa.outputs.project-found }}" >> $GITHUB_STEP_SUMMARY
+          echo "SolutionB solution: ${{ steps.solutionb.outputs.solution-found }}" >> $GITHUB_STEP_SUMMARY
+          echo "SolutionB project: ${{ steps.solutionb.outputs.project-found }}" >> $GITHUB_STEP_SUMMARY
+          echo "Deep nested high-depth first project: ${{ steps.deep_nested.outputs.project-found }}" >> $GITHUB_STEP_SUMMARY
