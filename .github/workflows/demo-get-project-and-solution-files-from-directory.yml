@@ -49,10 +49,10 @@ jobs:
       - name: Assert 2 - No project found at shallow depth
         uses: ./testing/assert
         with:
-          expected: ''
-            # expected empty
+          # expected: '' would fail the test since assert is expecting a value for expected
+          expected: /^\s*$/
           actual: ${{ steps.project_shallow.outputs.project-found }}
-          mode: absent
+          mode: regex
           test-name: Test 2 - Shallow project none
           summary-file: ${{ env.SUMMARY_FILE }}
 

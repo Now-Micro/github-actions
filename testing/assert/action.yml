@@ -2,7 +2,7 @@ name: Assert
 description: Make assertions in GitHub Actions workflows to mimic test frameworks.
 inputs:
   expected:
-    description: "The expected value (string or regex suffix)"
+    description: "The expected value (string or regex suffix)."
     required: true
   actual:
     description: "The actual value to compare against the expected value"
@@ -14,7 +14,7 @@ inputs:
     description: "Name of the test for summary output"
     required: true
   mode:
-    description: "Comparison mode: exact | endswith | present | absent"
+    description: "Comparison mode: exact | endswith | present | absent | regex"
     required: false
     default: "exact"
 
