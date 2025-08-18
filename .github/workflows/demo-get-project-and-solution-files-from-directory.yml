@@ -31,7 +31,7 @@ jobs:
         uses: ./testing/assert
         with:
           expected: RootSolution.sln
-          actual: ${{ steps.root_solution.outputs.solution-found }}
+          actual: ${{ steps.root_solution.outputs.solution-found || ' ' }}
           mode: present
           test-name: Test 1 - Solution Found
           summary-file: ${{ env.SUMMARY_FILE }}
@@ -40,7 +40,7 @@ jobs:
         uses: ./testing/assert
         with:
           expected: Test.csproj
-          actual: ${{ steps.root_solution.outputs.project-found }}
+          actual: ${{ steps.root_solution.outputs.project-found || ' ' }}
           mode: present
           test-name: Test 1 - Project found
           summary-file: ${{ env.SUMMARY_FILE }}
