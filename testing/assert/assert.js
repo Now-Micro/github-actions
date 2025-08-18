@@ -2,13 +2,16 @@
 const fs = require('fs');
 const path = require('path');
 
-function getEnv(name, required = false) {
+function getEnv(name, required = false, defaultValue = '') {
     const v = process.env[name];
-    if (required && (v === undefined || v === '')) {
-        console.error(`Missing required env var: ${name}`);
-        process.exit(1);
+    if (v === undefined || v === '') {
+        if (required) {
+            console.error(`Missing required env var: ${name}`);
+            process.exit(1);
+        }
+        return defaultValue;
     }
-    return v || '';
+    return v;
 }
 
 function parseRegex(spec) {
@@ -24,12 +27,11 @@ function run() {
     const expected = getEnv('INPUT_EXPECTED', true);
     const summaryFile = getEnv('INPUT_SUMMARY_FILE', true);
     const testName = getEnv('INPUT_TEST_NAME', true);
-    const mode = (getEnv('INPUT_MODE').toLowerCase() || 'exact');
-    const exitOnFail = (getEnv('INPUT_EXIT_ON_FAIL', 'false').toLowerCase() === 'true');
+    const mode = getEnv('INPUT_MODE', false, 'exact').toLowerCase() || 'exact';
+    const exitOnFail = getEnv('INPUT_EXIT_ON_FAIL', false, 'false').toLowerCase() === 'true';
     // Actual is optional for 'absent' mode (may be intentionally empty)
     let actual = getEnv('INPUT_ACTUAL', mode !== 'absent');
     if (mode !== 'absent' && (actual === undefined || actual === '')) {
-        // enforce presence for other modes
         console.error('Missing required env var: INPUT_ACTUAL');
         process.exit(1);
     }
@@ -62,13 +64,12 @@ function run() {
         const failLine = `FAIL: ${testName} (expected '${expected}' mode=${mode} actual='${actual}')`;
         fs.appendFileSync(summaryFile, failLine + '\n');
         console.error(failLine);
-        if (exitOnFail) {
-            process.exit(1);
-        }
+        // Exit with failure regardless; exitOnFail just mirrors this behavior now.
+        process.exit(1);
+    } else {
+        fs.appendFileSync(summaryFile, `PASS: ${testName}\n`);
+        console.log(`PASS: ${testName}`);
     }
-
-    fs.appendFileSync(summaryFile, `PASS: ${testName}\n`);
-    console.log(`PASS: ${testName}`);
 }
 
 if (require.main === module) run();

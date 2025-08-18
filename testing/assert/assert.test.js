@@ -154,3 +154,13 @@ test('summary file aggregates multiple results', () => {
   assert.strictEqual(r1.exitCode, 0);
   assert.strictEqual(r2.exitCode, 0);
 });
+
+// exit-on-fail causes immediate exit and no PASS line
+test('exit-on-fail stops after failure and exits 1', () => {
+  const env = baseEnv({ INPUT_EXPECTED: 'foo', INPUT_ACTUAL: 'bar', INPUT_EXIT_ON_FAIL: 'true', INPUT_TEST_NAME: 'FailFast' });
+  const { exitCode, summary } = execAssertion(env);
+  assert.strictEqual(exitCode, 1);
+  assert.match(summary, /FAIL: FailFast/);
+  assert.doesNotMatch(summary, /PASS: FailFast/);
+});
+
