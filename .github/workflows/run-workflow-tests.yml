@@ -18,6 +18,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo "Running Node tests in .github with coverage"
+          echo "Running Node tests in with coverage"
           node --version
-          npx --yes c8 -r text -r lcov node       
+          # Generates text and lcov coverage reports
+          npx --yes c8 -r text -r lcov node --test
