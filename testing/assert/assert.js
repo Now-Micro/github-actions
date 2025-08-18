@@ -17,7 +17,7 @@ function run() {
   const testName = getEnv('INPUT_TEST_NAME', true);
   const mode = (getEnv('INPUT_MODE').toLowerCase() || 'exact');
 
-  console.log(`[ASSERT] ${testName} :: mode=${mode} expected='${expected}' actual='${actual}' partial=${partialMatchAllowed}`);
+  console.log(`[ASSERT] ${testName} :: mode=${mode} expected='${expected}' actual='${actual}'`);
 
   let pass = false;
   switch (mode) {
