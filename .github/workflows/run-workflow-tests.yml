@@ -14,71 +14,11 @@ jobs:
       - name: Setup Node.js
         uses: ./setup-node
 
-      - name: Run action tests with coverage (JSON reporter)
-        id: run_tests
+      - name: Run action tests with coverage
         shell: bash
         run: |
           set -euo pipefail
-          echo "Running Node tests with coverage (JSON reporter)"
+          echo "Running Node tests in with coverage"
           node --version
-          set +e
-          npx --yes c8 -r text -r lcov node --test --test-reporter=json > test-results.json 2>&1
-          test_exit=$?
-          set -e
-          cat <<'EOF' | node
-          const fs=require('fs');
-          let pass=0,fail=0,total=0,duration=0;const lines=fs.readFileSync('test-results.json','utf8').split(/\r?\n/);
-          for(const line of lines){if(!line.trim())continue;let o;try{o=JSON.parse(line);}catch{continue;}if(o.type==='test'){total++;const s=o.result?.status;if(s==='passed')pass++;else if(s==='failed')fail++;if(o.result?.duration_ms)duration+=o.result.duration_ms;}}
-          fs.writeFileSync('test-summary.json',JSON.stringify({total,pass,fail,durationMs:duration},null,2));
-          EOF
-          echo "TEST_EXIT=$test_exit" >> $GITHUB_ENV
-          # Do not fail yet; summarize first
-
-      - name: Summarize results
-        if: always()
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "### Node Test Summary" >> "$GITHUB_STEP_SUMMARY"
-          if [ -f test-summary.json ]; then
-            total_tests=$(jq -r '.total' test-summary.json 2>/dev/null || echo 0)
-            total_pass=$(jq -r '.pass' test-summary.json 2>/dev/null || echo 0)
-            total_fail=$(jq -r '.fail' test-summary.json 2>/dev/null || echo 0)
-          else
-            total_tests=0; total_pass=0; total_fail=0;
-          fi
-          echo "* Total tests: $total_tests" >> "$GITHUB_STEP_SUMMARY"
-          echo "* Passed: $total_pass" >> "$GITHUB_STEP_SUMMARY"
-          echo "* Failed: $total_fail" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "#### Coverage (All files)" >> "$GITHUB_STEP_SUMMARY"
-          # Capture coverage table separately
-          if grep -q '^All files' test-results.json 2>/dev/null; then
-            echo '```' >> "$GITHUB_STEP_SUMMARY"
-            grep '^All files' test-results.json | tail -1 >> "$GITHUB_STEP_SUMMARY"
-            echo '```' >> "$GITHUB_STEP_SUMMARY"
-          elif grep -q '^All files' lcov.info 2>/dev/null; then
-            echo '```' >> "$GITHUB_STEP_SUMMARY"
-            grep '^All files' lcov.info | tail -1 >> "$GITHUB_STEP_SUMMARY"
-            echo '```' >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "Coverage summary not found" >> "$GITHUB_STEP_SUMMARY"
-          fi
-          if [ "$total_fail" -gt 0 ]; then
-            echo "\n#### Failing Test Names" >> "$GITHUB_STEP_SUMMARY"
-            # Derive failing test names from JSON lines
-            grep '"type":"test"' test-results.json | grep '"status":"failed"' | sed -E 's/.*"name":"([^"]+)".*/- \1/' >> "$GITHUB_STEP_SUMMARY" || true
-          fi
-
-      - name: Upload lcov report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-lcov
-          path: lcov.info
-          if-no-files-found: ignore
-          retention-days: 1
-
-      - name: Fail if tests failed
-        if: always() && env.TEST_EXIT != 0
-        run: exit 1
+          # Generates text and lcov coverage reports
+          npx --yes c8 -r text -r lcov node --test
