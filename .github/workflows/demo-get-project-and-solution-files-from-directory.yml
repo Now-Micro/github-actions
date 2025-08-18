@@ -6,13 +6,13 @@ jobs:
   demo-get-project-and-solution-files:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Setup summary file
         run: |
           echo "SUMMARY_FILE=$GITHUB_WORKSPACE/demo-get-proj-soln-summary.txt" >> $GITHUB_ENV
           : > $GITHUB_WORKSPACE/demo-get-proj-soln-summary.txt
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
 
       - name: List demo tree (informational)
         run: |
@@ -27,7 +27,7 @@ jobs:
           directory: demo/get-project-and-solution-files-from-directory
           max-depth: 1
 
-      - name: Assert 1 - Solution found is SampleSolution.sln
+      - name: Assert 1 - Solution found is RootSolution.sln
         uses: ./testing/assert
         with:
           expected: RootSolution.sln
@@ -133,6 +133,7 @@ jobs:
       - name: Summary
         if: always()
         run: |
+          if [ ! -f "$SUMMARY_FILE" ]; then echo "(Summary file missing)" >> "$GITHUB_STEP_SUMMARY"; exit 0; fi
           echo "### Demo get-project-and-solution-files-from-directory" >> $GITHUB_STEP_SUMMARY
           echo "All Tests (PASS indicates assertion success):" >> $GITHUB_STEP_SUMMARY
           cat "$SUMMARY_FILE" >> $GITHUB_STEP_SUMMARY
