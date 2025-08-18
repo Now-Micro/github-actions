@@ -1,0 +1,79 @@
+name: Demo - Dotnet Actions
+on:
+  workflow_dispatch:
+
+jobs:
+  demo-dotnet:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore demo/dotnet/demo.sln --nologo
+
+      - name: Build
+        run: dotnet build demo/dotnet/demo.sln -c Release --no-restore --nologo
+
+      - name: Test
+        id: test_run
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Run tests and capture output
+          out=$(dotnet test demo/dotnet/demo.sln -c Release --no-build --nologo --verbosity minimal || true)
+          echo "$out"
+          echo "raw<<EOF" >> $GITHUB_OUTPUT
+          echo "$out" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          # Extract summary line (Total tests: X Passed: Y Failed: Z Skipped: W)
+          summary_line=$(echo "$out" | grep -E 'Total tests:' | tail -1 || true)
+          echo "summary-line=$summary_line" >> $GITHUB_OUTPUT
+          # Parse counts
+          total=$(echo "$summary_line" | sed -n 's/.*Total tests: *\([0-9]\+\).*/\1/p')
+          passed=$(echo "$summary_line" | sed -n 's/.*Passed: *\([0-9]\+\).*/\1/p')
+          failed=$(echo "$summary_line" | sed -n 's/.*Failed: *\([0-9]\+\).*/\1/p')
+          echo "total=$total" >> $GITHUB_OUTPUT
+          echo "passed=$passed" >> $GITHUB_OUTPUT
+          echo "failed=$failed" >> $GITHUB_OUTPUT
+
+      - name: Assert - Tests summary line present
+        uses: ./testing/assert
+        with:
+          expected: "Total tests:"
+          actual: ${{ steps.test_run.outputs['summary-line'] || ' ' }}
+          mode: present
+          test-name: Tests summary present
+          summary-file: "${{ env.SUMMARY_FILE }}"
+
+      - name: Assert - No test failures
+        uses: ./testing/assert
+        with:
+          expected: "Failed: 0"
+          actual: ${{ steps.test_run.outputs['summary-line'] || ' ' }}
+          mode: present
+          test-name: No test failures
+          summary-file: "${{ env.SUMMARY_FILE }}"
+
+      - name: Assert - At least one test ran
+        uses: ./testing/assert
+        with:
+          expected: '^[1-9][0-9]*$'
+          actual: ${{ steps.test_run.outputs.total || '0' }}
+          mode: regex
+          test-name: At least one test (total > 0)
+          summary-file: "${{ env.SUMMARY_FILE }}"
+      # Using regex: expect total not to equal only "0"; interpret as failure if total exactly 0
+
+      - name: Summary
+        if: always()
+        run: |
+          if [ ! -f "$SUMMARY_FILE" ]; then echo "(Summary file missing)" >> "$GITHUB_STEP_SUMMARY"; exit 0; fi
+          echo "### Demo .NET Actions" >> $GITHUB_STEP_SUMMARY
+          echo "All Tests (PASS indicates assertion success):" >> $GITHUB_STEP_SUMMARY
+          cat "$SUMMARY_FILE" >> $GITHUB_STEP_SUMMARY

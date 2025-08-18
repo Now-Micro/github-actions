@@ -25,7 +25,7 @@ function parseRegex(spec) {
 
 function run() {
     const expected = getEnv('INPUT_EXPECTED', true);
-    const summaryFile = getEnv('INPUT_SUMMARY_FILE', true);
+    const summaryFile = getEnv('INPUT_SUMMARY_FILE' || "", true);
     const testName = getEnv('INPUT_TEST_NAME', true);
     const mode = getEnv('INPUT_MODE', false, 'exact').toLowerCase() || 'exact';
     const exitOnFail = getEnv('INPUT_EXIT_ON_FAIL', false, 'false').toLowerCase() === 'true';
@@ -62,12 +62,17 @@ function run() {
 
     if (!pass) {
         const failLine = `FAIL: ${testName} (expected '${expected}' mode=${mode} actual='${actual}')`;
-        fs.appendFileSync(summaryFile, failLine + '\n');
+
+        if (summaryFile) {
+            fs.appendFileSync(summaryFile, failLine + '\n');
+        }
         console.error(failLine);
         // Exit with failure regardless; exitOnFail just mirrors this behavior now.
         process.exit(1);
     } else {
-        fs.appendFileSync(summaryFile, `PASS: ${testName}\n`);
+        if (summaryFile) {
+            fs.appendFileSync(summaryFile, `PASS: ${testName}\n`);
+        }
         console.log(`PASS: ${testName}`);
     }
 }
