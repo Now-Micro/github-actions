@@ -10,7 +10,7 @@ function dlog(msg) {
 
 function walk(dir, maxDepth, findSolution, findProject, currentDepth = 0) {
   dlog(`Entering walk: dir='${dir}' depth=${currentDepth}/${maxDepth} findSolution=${findSolution} findProject=${findProject}`);
-  if (currentDepth > maxDepth) {
+  if (currentDepth >= maxDepth) {
     dlog(`Depth limit exceeded at ${dir}`);
     return;
   }
