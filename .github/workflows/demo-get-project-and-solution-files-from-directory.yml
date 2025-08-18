@@ -1,4 +1,4 @@
-name: Example - Get Project and Solution Files
+name: Demo Test - Get Project and Solution Files
 on:
   workflow_dispatch:
 
@@ -6,57 +6,73 @@ jobs:
   demo-locate-files:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Setup summary file
+        run: |
+          echo "SUMMARY_FILE=$GITHUB_WORKSPACE/demo-get-proj-soln-summary.txt" >> $GITHUB_ENV
+          : > $GITHUB_WORKSPACE/demo-get-proj-soln-summary.txt
+
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: List demo tree
+      - name: List demo tree (informational)
         run: |
           echo "Demo directory structure:" 
           find demo/get-project-and-solution-files-from-directory -maxdepth 8 -print
 
-      # Scenario 1: Find only root solution (SampleSolution.sln) with shallow depth
-      - name: Find root solution only (depth 1)
+      - name: Test 1 - Find root solution with depth=1
         id: root_solution
         uses: ./get-project-and-solution-files-from-directory
         with:
           directory: demo/get-project-and-solution-files-from-directory
           max-depth: 1
-          # defaults: find-solution true, find-project false
 
-      - name: Output root solution
-        run: |
-          echo 'Root solution: ${{ steps.root_solution.outputs.solution-found }}'
+      - name: Assert 1 - Root solution is SampleSolution.sln
+        uses: ./testing/assert
+        with:
+          expected: SampleSolution.sln
+          actual: ${{ steps.root_solution.outputs.solution-found }}
+          mode: endswith
+          test-name: Test 1 - Root solution
+          summary-file: ${{ env.SUMMARY_FILE }}
 
-      # Scenario 2: Attempt to find a project with insufficient depth (expect none)
-      - name: Find project (too shallow depth)
+      - name: Test 2 - Shallow project search depth=2
         id: project_shallow
         uses: ./get-project-and-solution-files-from-directory
         with:
           directory: demo/get-project-and-solution-files-from-directory
           find-solution: 'false'
           find-project: 'true'
-          max-depth: 2 # Not deep enough to reach AppA/AppA.csproj (depth 3)
+          max-depth: 2
 
-      - name: Output shallow project result
-        run: |
-          echo 'Shallow search project: ${{ steps.project_shallow.outputs.project-found }}'
+      - name: Assert 2 - No project found at shallow depth
+        uses: ./testing/assert
+        with:
+          expected: ''
+            # expected empty
+          actual: ${{ steps.project_shallow.outputs.project-found }}
+          mode: absent
+          test-name: Test 2 - Shallow project none
+          summary-file: ${{ env.SUMMARY_FILE }}
 
-      # Scenario 3: Find first project with sufficient depth (should find AppA.csproj)
-      - name: Find project (sufficient depth)
+      - name: Test 3 - Project search depth=4
         id: project_appa
         uses: ./get-project-and-solution-files-from-directory
         with:
-          directory: demo/get-project-and-solution-files-from-directory
-          find-solution: 'false'
-          find-project: 'true'
-          max-depth: 4
+            directory: demo/get-project-and-solution-files-from-directory
+            find-solution: 'false'
+            find-project: 'true'
+            max-depth: 4
 
-      - name: Output project (AppA expected)
-        run: |
-          echo 'First project (expected AppA.csproj): ${{ steps.project_appa.outputs.project-found }}'
+      - name: Assert 3 - First project is AppA.csproj
+        uses: ./testing/assert
+        with:
+          expected: AppA.csproj
+          actual: ${{ steps.project_appa.outputs.project-found }}
+          mode: endswith
+          test-name: Test 3 - First project AppA
+          summary-file: ${{ env.SUMMARY_FILE }}
 
-      # Scenario 4: Find both solution and project starting inside SolutionB
-      - name: Find solution & project in SolutionB
+      - name: Test 4 - Solution & project inside SolutionB
         id: solutionb
         uses: ./get-project-and-solution-files-from-directory
         with:
@@ -65,13 +81,24 @@ jobs:
           find-project: 'true'
           max-depth: 4
 
-      - name: Output SolutionB results
-        run: |
-          echo 'SolutionB solution: ${{ steps.solutionb.outputs.solution-found }}'
-          echo 'SolutionB first project: ${{ steps.solutionb.outputs.project-found }}'
+      - name: Assert 4 - SolutionB solution and Service.csproj detected (solution)
+        uses: ./testing/assert
+        with:
+          expected: SolutionB.sln
+          actual: ${{ steps.solutionb.outputs.solution-found }}
+          mode: endswith
+          test-name: Test 4a - SolutionB solution
+          summary-file: ${{ env.SUMMARY_FILE }}
+      - name: Assert 4b - SolutionB project Service.csproj detected
+        uses: ./testing/assert
+        with:
+          expected: Service.csproj
+          actual: ${{ steps.solutionb.outputs.project-found }}
+          mode: endswith
+          test-name: Test 4b - SolutionB project
+          summary-file: ${{ env.SUMMARY_FILE }}
 
-      # Scenario 5: Deep nested project (ThisShouldNotBeFound.csproj) reached only with high depth
-      - name: Deep nested search (high depth)
+      - name: Test 5 - Deep nested search (max-depth=15)
         id: deep_nested
         uses: ./get-project-and-solution-files-from-directory
         with:
@@ -80,16 +107,18 @@ jobs:
           find-project: 'true'
           max-depth: 15
 
-      - name: Output deep nested project (may differ if earlier project found first)
-        run: |
-          echo 'Deep nested search first project found: ${{ steps.deep_nested.outputs.project-found }}'
+      - name: Assert 5 - Deep search returns earliest project (AppA.csproj)
+        uses: ./testing/assert
+        with:
+          expected: AppA.csproj
+          actual: ${{ steps.deep_nested.outputs.project-found }}
+          mode: endswith
+          test-name: Test 5 - Deep earliest project
+          summary-file: ${{ env.SUMMARY_FILE }}
 
       - name: Summary
+        if: always()
         run: |
           echo "### Demo get-project-and-solution-files-from-directory" >> $GITHUB_STEP_SUMMARY
-          echo "Root solution depth1: ${{ steps.root_solution.outputs.solution-found }}" >> $GITHUB_STEP_SUMMARY
-          echo "Shallow project (expect empty): ${{ steps.project_shallow.outputs.project-found }}" >> $GITHUB_STEP_SUMMARY
-          echo "Project with depth4: ${{ steps.project_appa.outputs.project-found }}" >> $GITHUB_STEP_SUMMARY
-          echo "SolutionB solution: ${{ steps.solutionb.outputs.solution-found }}" >> $GITHUB_STEP_SUMMARY
-          echo "SolutionB project: ${{ steps.solutionb.outputs.project-found }}" >> $GITHUB_STEP_SUMMARY
-          echo "Deep nested high-depth first project: ${{ steps.deep_nested.outputs.project-found }}" >> $GITHUB_STEP_SUMMARY
+          echo "All Tests (PASS indicates assertion success):" >> $GITHUB_STEP_SUMMARY
+          cat "$SUMMARY_FILE" >> $GITHUB_STEP_SUMMARY

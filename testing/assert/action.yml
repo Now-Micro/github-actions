@@ -1,0 +1,50 @@
+name: Assert
+description: Assert that two values are equal
+inputs:
+  expected:
+    description: "The expected value (string or regex suffix)"
+    required: true
+  actual:
+    description: "The actual value to compare against the expected value"
+    required: true
+  summary-file:
+    description: "Path to the summary file where results will be logged"
+    required: true
+  test-name:
+    description: "Name of the test for summary output"
+    required: true
+  mode:
+    description: "Comparison mode: exact | endswith | present | absent"
+    required: false
+    default: "exact"
+runs:
+  using: 'composite'
+  steps:
+    - name: Assert values
+      shell: bash
+      run: |
+        set -euo pipefail
+        expected='${{ inputs.expected }}'
+        actual='${{ inputs.actual }}'
+        summary_file='${{ inputs.summary-file }}'
+        test_name='${{ inputs.test-name }}'
+        mode='${{ inputs.mode }}'
+        echo "[ASSERT] $test_name :: mode=$mode expected='$expected' actual='$actual'"
+        pass=false
+        case "$mode" in
+          exact)
+            [ "$actual" = "$expected" ] && pass=true || pass=false ;;
+          endswith)
+            echo "$actual" | grep -q "${expected}$" && pass=true || pass=false ;;
+          present)
+            [ -n "$actual" ] && pass=true || pass=false ;;
+          absent)
+            [ -z "$actual" ] && pass=true || pass=false ;;
+          *) echo "Unknown mode '$mode'" >&2; exit 1 ;;
+        esac
+        if [ "$pass" != true ]; then
+          echo "Assertion FAILED ($mode) :: expected '$expected' actual '$actual'" >&2
+          echo "FAIL: $test_name (expected '$expected' mode=$mode actual='$actual')" >> "$summary_file"
+          exit 1
+        fi
+        echo "PASS: $test_name" >> "$summary_file"
