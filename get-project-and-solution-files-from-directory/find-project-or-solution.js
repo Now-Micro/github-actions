@@ -27,6 +27,7 @@ function walk(dir, maxDepth, findSolution, findProject, currentDepth = 0) {
   }
   dlog(`Listing ${entries.length} entries in ${dir}`);
   for (const entry of entries) {
+    if (solutionFound && projectFound) break;
     const full = path.join(dir, entry.name);
     if (entry.isFile()) {
       dlog(`File: ${full}`);
@@ -44,7 +45,6 @@ function walk(dir, maxDepth, findSolution, findProject, currentDepth = 0) {
     if (entry.isDirectory() && !(solutionFound && projectFound)) {
       walk(full, maxDepth, findSolution, findProject, currentDepth + 1);
     }
-    if (solutionFound && projectFound) break;
   }
 }
 
