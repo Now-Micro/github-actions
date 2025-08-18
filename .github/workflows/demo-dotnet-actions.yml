@@ -1,4 +1,4 @@
-name: Demo - Dotnet Actions
+name: Demo - Dotnet Actions (build, test, and lint)
 on:
   workflow_dispatch:
 
