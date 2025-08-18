@@ -8,49 +8,52 @@ function dlog(msg) {
   if (debug) console.log(`[DEBUG] ${msg}`);
 }
 
+// Legacy DFS walk kept for potential reuse/testing
 function walk(dir, maxDepth, findSolution, findProject, currentDepth = 0) {
-  dlog(`Entering walk: dir='${dir}' depth=${currentDepth}/${maxDepth} findSolution=${findSolution} findProject=${findProject}`);
-  if (currentDepth >= maxDepth) {
-    dlog(`Depth limit exceeded at ${dir}`);
-    return;
-  }
-  if (solutionFound && projectFound) {
-    dlog('Both solution and project already found, pruning traversal');
-    return;
-  }
+  dlog(`(DFS) Entering walk: dir='${dir}' depth=${currentDepth}/${maxDepth} findSolution=${findSolution} findProject=${findProject}`);
+  if (currentDepth > maxDepth) return;
+  if (solutionFound && projectFound) return;
   let entries;
-  try {
-    entries = fs.readdirSync(dir, { withFileTypes: true });
-  } catch (e) {
-    console.error(`Cannot read directory: ${dir} (${e.message})`);
-    return;
-  }
-  dlog(`Listing ${entries.length} entries in ${dir}`);
+  try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch (e) { console.error(`Cannot read directory: ${dir} (${e.message})`); return; }
   for (const entry of entries) {
-    if (solutionFound && projectFound) break;
     const full = path.join(dir, entry.name);
-    if (entry.isFile()) {
-      dlog(`File: ${full}`);
-    } else if (entry.isDirectory()) {
-      dlog(`Dir: ${full}`);
+    if (findSolution && entry.isFile() && entry.name.endsWith('.sln')) { solutionFound = full; console.log(`Found solution: ${solutionFound}`); }
+    if (findProject && entry.isFile() && entry.name.endsWith('.csproj')) { projectFound = full; console.log(`Found project: ${projectFound}`); }
+    if (entry.isDirectory() && !(solutionFound && projectFound)) walk(full, maxDepth, findSolution, findProject, currentDepth + 1);
+    if (solutionFound && projectFound) break;
+  }
+}
+
+// New BFS search to prioritize shallower matches
+function searchBFS(startDir, maxDepth, findSolution, findProject) {
+  const queue = [{ dir: startDir, depth: 0 }];
+  while (queue.length && !(solutionFound && projectFound)) {
+    const { dir, depth } = queue.shift();
+    if (depth > maxDepth) continue;
+    dlog(`(BFS) Visiting dir='${dir}' depth=${depth}`);
+    let entries;
+    try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch (e) { console.error(`Cannot read directory: ${dir} (${e.message})`); continue; }
+    // First pass: files at this depth
+    for (const entry of entries) {
+      if (!entry.isFile()) continue;
+      const full = path.join(dir, entry.name);
+      if (findSolution && !solutionFound && entry.name.endsWith('.sln')) { solutionFound = full; console.log(`Found solution: ${solutionFound}`); }
+      if (findProject && !projectFound && entry.name.endsWith('.csproj')) { projectFound = full; console.log(`Found project: ${projectFound}`); }
+      if (solutionFound && projectFound) break;
     }
-    if (!solutionFound && findSolution && entry.isFile() && entry.name.endsWith('.sln')) {
-      solutionFound = full;
-      console.log(`Found solution: ${solutionFound}`);
-    }
-    if (!projectFound && findProject && entry.isFile() && entry.name.endsWith('.csproj')) {
-      projectFound = full;
-      console.log(`Found project: ${projectFound}`);
-    }
-    if (entry.isDirectory() && !(solutionFound && projectFound)) {
-      walk(full, maxDepth, findSolution, findProject, currentDepth + 1);
+    if (solutionFound && projectFound) break;
+    // Second pass: enqueue directories
+    for (const entry of entries) {
+      if (entry.isDirectory()) {
+        const next = path.join(dir, entry.name);
+        queue.push({ dir: next, depth: depth + 1 });
+      }
     }
   }
 }
 
 function run() {
   try {
-    // Reset global state each invocation
     projectFound = undefined;
     solutionFound = undefined;
     debug = (process.env.INPUT_DEBUG_MODE || 'false').toLowerCase() === 'true';
@@ -66,36 +69,22 @@ function run() {
     console.log(`Max depth: ${maxDepth}`);
     console.log(`Find solution: ${findSolution}`);
     console.log(`Find project: ${findProject}`);
-    dlog(`Debug mode enabled`);
+    dlog('Debug mode enabled');
 
-    if (!inputDir) {
-      console.error('Input directory is required.');
-      process.exit(1);
-    }
-    if (!fs.existsSync(inputDir) || !fs.statSync(inputDir).isDirectory()) {
-      console.error(`Input directory does not exist or is not a directory: ${inputDir}`);
-      process.exit(1);
-    }
+    if (!inputDir) { console.error('Input directory is required.'); process.exit(1); }
+    if (!fs.existsSync(inputDir) || !fs.statSync(inputDir).isDirectory()) { console.error(`Input directory does not exist or is not a directory: ${inputDir}`); process.exit(1); }
 
     console.log(`Searching for .sln or .csproj files in ${inputDir}...`);
-    walk(inputDir, maxDepth, findSolution, findProject);
+    // Use BFS to prioritize shallower files (ensures AppA.csproj preferred over deep project)
+    searchBFS(inputDir, maxDepth, findSolution, findProject);
 
     console.log(`Project found: ${projectFound || 'None'}`);
     console.log(`Solution found: ${solutionFound || 'None'}`);
 
     if (githubOutput) {
-      if (solutionFound && solutionFound.endsWith('.sln')) {
-        dlog(`Writing solution-found output: ${solutionFound}`);
-        fs.appendFileSync(githubOutput, `solution-found=${solutionFound}\n`);
-      }
-      if (projectFound && projectFound.endsWith('.csproj')) {
-        dlog(`Writing project-found output: ${projectFound}`);
-        fs.appendFileSync(githubOutput, `project-found=${projectFound}\n`);
-      }
-    } else {
-      console.error('GITHUB_OUTPUT not set; cannot write outputs');
-      process.exit(1);
-    }
+      if (solutionFound && solutionFound.endsWith('.sln')) { dlog(`Writing solution-found output: ${solutionFound}`); fs.appendFileSync(githubOutput, `solution-found=${solutionFound}\n`); }
+      if (projectFound && projectFound.endsWith('.csproj')) { dlog(`Writing project-found output: ${projectFound}`); fs.appendFileSync(githubOutput, `project-found=${projectFound}\n`); }
+    } else { console.error('GITHUB_OUTPUT not set; cannot write outputs'); process.exit(1); }
   } catch (err) {
     console.error('Error:', err.message);
     if (debug) console.error(err.stack);
@@ -107,4 +96,4 @@ if (require.main === module) {
   run();
 }
 
-module.exports = { run, walk };
+module.exports = { run, walk, searchBFS };
