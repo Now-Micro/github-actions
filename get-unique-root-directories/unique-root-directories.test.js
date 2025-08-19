@@ -259,3 +259,27 @@ test('complex regex: backslash path separators do not match (ensures POSIX style
   assert.match(r.outputContent, /unique_root_directories=\["RealProj"\]/);
 });
 
+test('complex regex: whitespace', () => {
+  const pattern = '^([^\\/]+)\\/(src|tests?)\\/.*\\.(cs|csproj|sln)$';
+  const paths = [
+    '  Solution1/src/Api/Program.cs',
+    '   Solution1/src/Api/Program.cs',
+    '     Solution1/src/Api/Controllers/Home.cs',
+    '     Solution1/src/Lib/Lib.cs',
+    '   Solution1/src/Lib/Lib.cs',
+    '       Solution1/src/Util/Helper.cs',
+    '     Solution1/src/Util/Helper.cs',
+    ' Solution1/src/Util/Another.cs',
+    '     Solution2/tests/Util/Another.cs',
+    '   Solution3/tests/Test.cs',
+    ' SkipSolution1/example/tests/README.md',
+    '  SkipSolution2/src/Api/README.md',
+    '     SkipSolution3/README.md'
+  ].join(',');
+  const r = runWith({ INPUT_PATTERN: pattern, INPUT_PATHS: paths });
+  assert.strictEqual(r.exitCode, 0);
+  assert.match(r.outputContent, /unique_root_directories=\["Solution1","Solution2","Solution3"\]/);
+});
+
+
+
