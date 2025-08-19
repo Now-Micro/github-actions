@@ -70,7 +70,8 @@ test('missing pattern exits 1', () => {
 
 // 5 missing GITHUB_OUTPUT
 test('missing GITHUB_OUTPUT exits 1', () => {
-  const r = withEnv({ INPUT_PATTERN: '^(.*)$', INPUT_PATHS: 'a,b' }, () => run());
+  // Override any runner-provided GITHUB_OUTPUT with empty string to simulate absence
+  const r = withEnv({ INPUT_PATTERN: '^(.*)$', INPUT_PATHS: 'a,b', GITHUB_OUTPUT: '' }, () => run());
   assert.strictEqual(r.exitCode, 1);
   assert.match(r.err + r.out, /GITHUB_OUTPUT not set/);
 });
