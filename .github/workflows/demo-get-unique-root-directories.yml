@@ -213,7 +213,7 @@ jobs:
           test-name: 'Linting Regex 1,2,3 roots'
           summary-file: ${{ steps.pre.outputs.summary_file }}
           mode: exact
-          expected: '["Solution1","Solution2","Solution3"]'
+          expected: '["Solution1","Solution2","Solution3","Solution4","Solution5","Solution6"]'
           actual: ${{ steps.t13.outputs.unique_root_directories }}
       - name: Summarize
         if: always()
