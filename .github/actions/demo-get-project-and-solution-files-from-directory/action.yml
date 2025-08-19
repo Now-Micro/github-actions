@@ -1,0 +1,145 @@
+
+name: 'Demo - Get Project And Solution Files (Composite Action)'
+description: 'Extracts project and solution files from a specified directory'
+author: 'Trafera'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup summary file
+      shell: bash
+      run: |
+        echo "SUMMARY_FILE=$GITHUB_WORKSPACE/demo-get-proj-soln-summary.txt" >> $GITHUB_ENV
+        : > $GITHUB_WORKSPACE/demo-get-proj-soln-summary.txt
+
+    - name: List demo tree (informational)
+      shell: bash
+      run: |
+        echo "Demo directory structure:" 
+        find demo/get-project-and-solution-files-from-directory -maxdepth 8 -print
+
+    - name: Test 1 - Find root solution with depth=1
+      id: root_solution
+      uses: ./get-project-and-solution-files-from-directory
+      with:
+        debug-mode: 'true'
+        directory: demo/get-project-and-solution-files-from-directory
+        max-depth: 1
+
+    - name: Assert 1 - Solution found is RootSolution.sln
+      uses: ./testing/assert
+      with:
+        expected: RootSolution.sln
+        actual: ${{ steps.root_solution.outputs.solution-found || ' ' }}
+        mode: present
+        test-name: Test 1 - Solution Found
+        summary-file: ${{ env.SUMMARY_FILE }}
+    
+    - name: Assert 1 - Project found is Test.csproj
+      uses: ./testing/assert
+      with:
+        expected: Test.csproj
+        actual: ${{ steps.root_solution.outputs.project-found || ' ' }}
+        mode: present
+        test-name: Test 1 - Project found
+        summary-file: ${{ env.SUMMARY_FILE }}
+
+    - name: Test 2 - Shallow project search depth=2
+      id: project_shallow
+      uses: ./get-project-and-solution-files-from-directory
+      with:
+        debug-mode: 'true'
+        directory: demo/get-project-and-solution-files-from-directory
+        find-solution: 'false'
+        find-project: 'true'
+        max-depth: 1 # reduced from 2 so Test.csproj (depth 2) is not discovered
+
+    - name: Assert 2 - Solution Found is RootSolution.sln
+      uses: ./testing/assert
+      with:
+        expected: RootSolution.sln
+        actual: ${{ steps.project_shallow.outputs.solution-found || ' ' }}
+        mode: present
+        test-name: Test 2 - Solution Found
+        summary-file: ${{ env.SUMMARY_FILE }}
+
+
+    - name: Assert 2 - No project found at Depth of 2
+      uses: ./testing/assert
+      with:
+        expected: /^\s*$/
+        actual: ${{ steps.project_shallow.outputs.project-found || ' ' }}
+        mode: regex
+        test-name: Test 2 - No Project Found
+        summary-file: ${{ env.SUMMARY_FILE }}
+
+    - name: Test 3 - Depth stops at right spot
+      id: project_appa
+      uses: ./get-project-and-solution-files-from-directory
+      with:
+        debug-mode: 'true'
+        directory: demo/get-project-and-solution-files-from-directory/SolutionA/src/A
+        find-solution: 'true'
+        find-project: 'true'
+        max-depth: 3
+
+    - name: Assert 3 - No Project Found at Depth 3
+      uses: ./testing/assert
+      with:
+        expected: /^\s*$/
+        actual: ${{ steps.project_appa.outputs.project-found || ' ' }}
+        mode: regex
+        test-name: Test 3 - No Project Found at Depth 3
+        summary-file: ${{ env.SUMMARY_FILE }}
+
+    - name: Assert 3 - No Solution Found at Depth 3
+      uses: ./testing/assert
+      with:
+        expected: /^\s*$/
+        actual: ${{ steps.project_appa.outputs.solution-found || ' ' }}
+        mode: regex
+        test-name: Test 3 - No Solution Found at Depth 3
+        summary-file: ${{ env.SUMMARY_FILE }}
+
+    - name: Test 4 - Solution & project inside SolutionB
+      id: solutionb
+      uses: ./get-project-and-solution-files-from-directory
+      with:
+        debug-mode: 'true'
+        directory: demo/get-project-and-solution-files-from-directory/SolutionB
+        find-solution: 'true'
+        find-project: 'true'
+        max-depth: 4
+
+    - name: Assert 4 - SolutionB solution and Service.csproj detected (solution)
+      uses: ./testing/assert
+      with:
+        expected: SolutionB.sln
+        actual: ${{ steps.solutionb.outputs.solution-found || ' ' }}
+        mode: endswith
+        test-name: Test 4 - SolutionB solution
+        summary-file: ${{ env.SUMMARY_FILE }}
+
+    - name: Assert 4 - SolutionB project Service.csproj detected
+      uses: ./testing/assert
+      with:
+        expected: Service.csproj
+        actual: ${{ steps.solutionb.outputs.project-found || ' ' }}
+        mode: endswith
+        test-name: Test 4 - SolutionB project
+        summary-file: ${{ env.SUMMARY_FILE }}
+
+    - name: Summary
+      shell: bash
+      if: always()
+      run: |
+        if [ ! -f "$SUMMARY_FILE" ]; then echo "(Summary file missing)" >> "$GITHUB_STEP_SUMMARY"; exit 0; fi
+        echo "### Demo get-project-and-solution-files-from-directory" >> $GITHUB_STEP_SUMMARY
+        echo "All Tests (PASS indicates assertion success):" >> $GITHUB_STEP_SUMMARY
+        cat "$SUMMARY_FILE" >> $GITHUB_STEP_SUMMARY
+
+
+   
