@@ -3,6 +3,8 @@ const fs = require('fs');
 function run() {
     const pattern = process.env.INPUT_PATTERN;
     const debugMode = process.env.INPUT_DEBUG_MODE === 'true';
+    const raw = process.env.INPUT_PATHS || '';
+
     if (debugMode) {
         console.log(`🔍 Debug mode is ON`);
         console.log(`🔍 INPUT_PATTERN: ${pattern}`);
@@ -11,7 +13,6 @@ function run() {
     if (!pattern) {
         console.error('INPUT_PATTERN is required'); process.exit(1);
     }
-    const raw = process.env.INPUT_PATHS || '';
     const dirs = raw.split(',').map(s => {
         if (debugMode) {
             console.log(`🔍 Processing path: ${s}`);
