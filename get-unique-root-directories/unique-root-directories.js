@@ -2,11 +2,26 @@ const fs = require('fs');
 
 function run() {
     const pattern = process.env.INPUT_PATTERN;
+    const debugMode = process.env.INPUT_DEBUG_MODE === 'true';
+    if (debugMode) {
+        console.log(`🔍 Debug mode is ON`);
+        console.log(`🔍 INPUT_PATTERN: ${pattern}`);
+        console.log(`🔍 INPUT_PATHS: ${raw}`);
+    }
     if (!pattern) {
         console.error('INPUT_PATTERN is required'); process.exit(1);
     }
     const raw = process.env.INPUT_PATHS || '';
-    const dirs = raw.split(',').map(s => s.trim().replace(/^["']|["']$/g, '')).filter(Boolean);
+    const dirs = raw.split(',').map(s => {
+        if (debugMode) {
+            console.log(`🔍 Processing path: ${s}`);
+        }
+        const afterProcessing = s.trim().replace(/^["']|["']$/g, '')
+        if (debugMode) {
+            console.log(`🔍 Processed path: ${afterProcessing}`);
+        }
+        return afterProcessing;
+    }).filter(Boolean);
     console.log(`🔍 Getting Unique Root Directories from: ${raw}`);
     console.log(`Using pattern: ${pattern}`);
     let re;
@@ -18,8 +33,14 @@ function run() {
     }
     const set = new Set();
     for (const d of dirs) {
+        if (debugMode) {
+            console.log(`🔍 Checking directory: ${d}`);
+        }
         const m = d.match(re);
         if (m) {
+            if (debugMode) {
+                console.log(`🔍 Matched directory: ${m[1]}`);
+            }
             if (m[1]) {
                 if (!set.has(m[1])) {
                     console.log(`🔍 Unique Root Directory found: '${m[1]}'`);

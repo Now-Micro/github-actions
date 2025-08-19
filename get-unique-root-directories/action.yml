@@ -2,6 +2,10 @@ name: 'Get Unique Root Directories'
 description: 'Detects unique root directories from changed files and returns them as a JSON array'
 author: 'Trafera'
 inputs: 
+  debug-mode:
+    description: 'Enable debug mode for additional logging.'
+    required: false
+    default: 'false'
   pattern:
     description: 'Regular expression used to determine which file names should be used for generating unique root directories.'
     required: true
@@ -25,5 +29,6 @@ runs:
       shell: bash
       run: node ./get-unique-root-directories/unique-root-directories.js
       env:
+        INPUT_DEBUG_MODE: ${{ inputs.debug-mode }}
         INPUT_PATHS: ${{ inputs.paths }}
         INPUT_PATTERN: ${{ inputs.pattern }}
