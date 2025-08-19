@@ -1,4 +1,4 @@
-name: demo-unique-root-directories
+name: Demo - Get Unique Root Directories
 on:
   workflow_dispatch: {}
 
