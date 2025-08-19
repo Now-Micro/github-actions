@@ -1,6 +1,6 @@
 # Copilot Project Instructions
 
-This repository is a monorepo of custom GitHub Composite Actions plus supporting demo & test assets. The goal is high signal, low dependency actions with deterministic, testable behavior. Follow the established patterns below when reading, modifying, or adding code.
+This repository is a monorepo of custom GitHub Composite Actions plus supporting demo & test assets. The goal is high signal, low dependency actions with deterministic, testable behavior. Follow the established patterns below when reading, modifying, or adding code. Make sure to read all of the individual instructions in `.github/instructions/`.  Some may not apply to the task at hand, so only apply the relevant ones.
 
 ## Architecture & Patterns
 - Each action lives in its own top-level folder: `action-name/` containing:
@@ -28,16 +28,15 @@ This repository is a monorepo of custom GitHub Composite Actions plus supporting
 - Coverage gathering (manual): `npx --yes c8 -r text -r lcov node --test`.
 
 ## Workflow Demo Pattern
-- Demo workflows behave like test suites: each logical assertion is a step using `./testing/assert` action.
-- A final summary step aggregates the assertion summary file into the workflow run summary (step names correspond to test names).
 - When adding a demo: follow guidance in `.github/instructions/demo-workflows.md`.
 
 ## Adding / Modifying Actions
 1. Create folder + `action.yml` referencing new JS file (no inline heredoc JS).
 2. Implement `run()`; resolve & validate all required inputs early; exit with code 1 on error.
-3. Write exhaustive tests first (aim for full statement/branch coverage, especially around regex or traversal logic).
+3. Write exhaustive tests first (aim for full statement/branch coverage, especially around regex or traversal logic).  See [this](../get-unique-root-directories/unique-root-directories.test.js) for an example.
 4. Avoid external dependencies unless absolutely necessary (currently zero NPM deps).
 5. Keep logs stable & human friendly; do not encode control sequences that complicate summary parsing.
+6. Add a demo workflow in `.github/workflows/` referencing a new composite action in `.github/actions/` that uses `testing/assert` for verifications. Follow the guidance established in `.github/instructions/demo-workflows.md`
 
 ## Project-Specific Nuances
 - BFS vs DFS: Finder action intentionally uses BFS to select the shallowest matching project/solution; do not revert to DFS.
