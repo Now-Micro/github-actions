@@ -139,7 +139,7 @@ jobs:
         id: t9
         uses: ./get-unique-root-directories
         with:
-          pattern: '^([^/.]+)/'
+          pattern: ^([^/.]+)/
           paths: 'Alpha/src/File.cs,Beta/tests/Test.cs,Alpha/docs/Readme.md,Gamma/one/two/three.txt,Bad.Root/src/File.cs,.hidden/src/File.cs,delta/,epsilon,foo.bar/,my-app/src/index.cs,my_app/src/index.cs,Zeta/Another.cs,Alpha/more/Deeper.cs,  Beta/space.cs'
       - name: assert caret pattern roots
         uses: ./testing/assert
@@ -153,7 +153,7 @@ jobs:
         id: t10
         uses: ./get-unique-root-directories
         with:
-          pattern: '^([^/.]+)/'
+          pattern: ^([^/.]+)/
           paths: 'Proj/one.cs,Proj/two.cs,Proj/three.cs,Other/file.cs,Other/file2.cs'
       - name: assert caret pattern duplicates
         uses: ./testing/assert
@@ -167,7 +167,7 @@ jobs:
         id: t11
         uses: ./get-unique-root-directories
         with:
-          pattern: '^([^/.]+)/'
+          pattern: ^([^/.]+)/
           paths: '.hidden,with.dot,.hidden/file,bad.root/file,onlyfile,/leading/slash/file'
       - name: assert caret pattern no matches
         uses: ./testing/assert
@@ -182,12 +182,12 @@ jobs:
         id: t12
         uses: ./get-unique-root-directories
         with:
-          pattern: '^([^\\/]+)\\/(src|tests?)\\/.*\\.(cs|csproj|sln)$'
-          paths:    'Solution1/src/Api/Program.cs, Solution1/src/Api/Program.cs, Solution1/src/Api/Controllers/Home.cs, Solution1/src/Lib/Lib.cs, Solution1/src/Lib/Lib.cs, Solution1/src/Util/Helper.cs, Solution1/src/Util/Helper.cs, Solution1/src/Util/Another.cs, Solution2/tests/Util/Another.cs, Solution3/example/tests/Test.cs, SkipSolution1/example/tests/README.md, SkipSolution2/src/Api/README.md, SkipSolution3/README.md'
+          pattern: ^([^\\/]+)\\/(src|tests?)\\/.*\\.(cs|csproj|sln)$
+          paths: 'Solution1/src/Api/Program.cs, Solution1/src/Api/Program.cs, Solution1/src/Api/Controllers/Home.cs, Solution1/src/Lib/Lib.cs, Solution1/src/Lib/Lib.cs, Solution1/src/Util/Helper.cs, Solution1/src/Util/Helper.cs, Solution1/src/Util/Another.cs, Solution2/tests/Util/Another.cs, Solution3/tests/Test.cs, SkipSolution1/example/tests/README.md, SkipSolution2/src/Api/README.md, SkipSolution3/README.md'
       - name: assert Solution 1,2,3 roots
         uses: ./testing/assert
         with:
-          test-name: 'Solution 1,2,3 roots'
+          test-name: 'Testing Regex 1,2,3 roots'
           summary-file: ${{ steps.pre.outputs.summary_file }}
           mode: exact
           expected: '["Solution1","Solution2","Solution3"]'
@@ -197,12 +197,12 @@ jobs:
         id: t13
         uses: ./get-unique-root-directories
         with:
-          pattern: '^([^\\/]+)\\/(src|tests?)\\/.*\\.(cs|csproj|sln)$'
-          paths:    'Solution1/src/Api/Program.cs, Solution1/src/Api/Program.cs, Solution1/src/Api/Controllers/Home.cs, Solution1/src/Lib/Lib.cs, Solution1/src/Lib/Lib.cs, Solution1/src/Util/Helper.cs, Solution1/src/Util/Helper.cs, Solution1/src/Util/Another.cs, Solution2/tests/Util/Another.cs, Solution3/example/tests/Test.cs, Solution4/example/tests/README.md, Solution5/src/Api/README.md, Solution6/README.md'
+          pattern: ^([^/.]+)/
+          paths: 'Solution1/src/Api/Program.cs, Solution1/src/Api/Program.cs, Solution1/src/Api/Controllers/Home.cs, Solution1/src/Lib/Lib.cs, Solution1/src/Lib/Lib.cs, Solution1/src/Util/Helper.cs, Solution1/src/Util/Helper.cs, Solution1/src/Util/Another.cs, Solution2/tests/Util/Another.cs, Solution3/tests/Test.cs, Solution4/example/tests/README.md, Solution5/src/Api/README.md, Solution6/README.md'
       - name: assert linting Solution 1,2,3 roots
         uses: ./testing/assert
         with:
-          test-name: 'linting Solution 1,2,3 roots'
+          test-name: 'Linting Regex 1,2,3 roots'
           summary-file: ${{ steps.pre.outputs.summary_file }}
           mode: exact
           expected: '["Solution1","Solution2","Solution3"]'

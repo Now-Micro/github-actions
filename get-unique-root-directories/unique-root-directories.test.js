@@ -160,7 +160,7 @@ test('testing regex: no matches returns empty array', () => {
   assert.strictEqual(occurrences, 0);
 });
 
-test('^([^/.]+)/ pattern: extracts valid roots, skips dotted/hidden/invalid, preserves order', () => {
+test('Linting pattern: extracts valid roots, skips dotted/hidden/invalid, preserves order', () => {
   const pattern = '^([^/.]+)/';
   const paths = [
     'Alpha/src/File.cs',          // match Alpha
@@ -186,7 +186,7 @@ test('^([^/.]+)/ pattern: extracts valid roots, skips dotted/hidden/invalid, pre
   assert.strictEqual(occurrences, 7);
 });
 
-test('^([^/.]+)/ pattern: duplicates only logged once per root', () => {
+test('Linting pattern: duplicates only logged once per root', () => {
   const pattern = '^([^/.]+)/';
   const paths = [
     'Proj/one.cs', 'Proj/two.cs', 'Proj/three.cs', // same root
