@@ -5,7 +5,7 @@ runs:
   using: composite
   steps:
     - name: Build
-      uses: Now-Micro/actions/dotnet/build
+      uses: Now-Micro/actions/dotnet/build@v1
       with:   
           solution-file: demo/dotnet/demo.sln
           build-configuration: 'Release'
@@ -13,7 +13,7 @@ runs:
           node-version: '18.x'
 
     - name: Run tests
-      uses: Now-Micro/actions/dotnet/test
+      uses: Now-Micro/actions/dotnet/test@v1
       with:
           directory: demo/dotnet
       

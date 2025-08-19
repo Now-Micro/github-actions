@@ -32,7 +32,7 @@ runs:
   using: "composite"
   steps:
     - name: Setup Node.js
-      uses: Now-Micro/actions/setup-node
+      uses: Now-Micro/actions/setup-node@v1
 
     - name: Find .sln or .csproj file
       id: find-file
