@@ -38,6 +38,10 @@ This repository is a monorepo of custom GitHub Composite Actions plus supporting
 5. Keep logs stable & human friendly; do not encode control sequences that complicate summary parsing.
 6. Add a demo workflow in `.github/workflows/` referencing a new composite action in `.github/actions/` that uses `testing/assert` for verifications. Follow the guidance established in `.github/instructions/demo-workflows.md`
 
+## Refactoring
+- Analyze the existing implementation.  If it makes sense to separate the code into smaller composite action, propose it to the user and ask how to proceed.
+- Make sure to follow the same file structure and patterns as outlined above.
+
 ## Project-Specific Nuances
 - BFS vs DFS: Finder action intentionally uses BFS to select the shallowest matching project/solution; do not revert to DFS.
 - Regex capture expectation: `get-unique-root-directories` relies on group 1; patterns must include a capturing group—document this in consumer workflows.
