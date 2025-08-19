@@ -1,4 +1,4 @@
-name: Demo - Get Project and Solution Files
+name: Demo - All
 on:
   workflow_dispatch:
 
