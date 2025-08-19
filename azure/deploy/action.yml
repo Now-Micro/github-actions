@@ -81,7 +81,7 @@ runs:
         subscription-id: ${{ inputs.azure-subscription-id }}
 
     - name: Configure ASP.NET Core Environment
-      uses: ./azure/configure-aspnetcore-environment
+      uses: Now-Micro/actions/azure/configure-aspnetcore-environment
       with:
         app-name: ${{ inputs.app-name }}
         aspnet-environment: ${{ inputs.aspnet-environment }}

@@ -12,7 +12,7 @@ runs:
   steps:
     - name: Get solution or project file
       id: get-solution-or-proj
-      uses: ./get-project-and-solution-files-from-directory
+      uses: Now-Micro/actions/get-project-and-solution-files-from-directory
       with:
         directory: ${{ inputs.directory }}
         max-depth: '3'

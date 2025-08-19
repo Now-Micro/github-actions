@@ -21,7 +21,7 @@ runs:
   using: 'composite'
   steps:
     - name: Setup Node.js
-      uses: ./setup-node
+      uses: Now-Micro/actions/setup-node
 
     - name: Determine changed project directories
       id: parse-changes
