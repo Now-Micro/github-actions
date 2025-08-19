@@ -3,7 +3,7 @@ on:
   workflow_dispatch: {}
 
 jobs:
-  demo:
+  demo-get-unique-root-directories:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
