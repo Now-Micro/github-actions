@@ -3,6 +3,15 @@ on:
   workflow_dispatch:
 
 jobs:
+  demo-dotnet:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run demo for dotnet actions
+        uses: ./.github/actions/demo-dotnet-actions
+        
   demo-get-project-and-solution-files:
     runs-on: ubuntu-latest
     steps:

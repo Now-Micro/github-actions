@@ -1,0 +1,24 @@
+name: Demo - Dotnet Actions (build, test, and lint)
+description: This workflow demonstrates the use of various dotnet actions for building, testing, and linting a .NET project.
+
+runs:
+  using: composite
+  steps:
+    - name: Build
+      uses: ./dotnet/build
+      with:   
+          solution-file: demo/dotnet/demo.sln
+          build-configuration: 'Release'
+          dotnet-version: '8.0.x'
+          node-version: '18.x'
+
+    - name: Run tests
+      uses: ./dotnet/test
+      with:
+          directory: demo/dotnet
+      
+    - name: Lint
+      uses: ./dotnet/lint
+      with:
+          directory: demo/dotnet
+

@@ -9,21 +9,5 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build
-        uses: ./dotnet/build
-        with:   
-            solution-file: demo/dotnet/demo.sln
-            build-configuration: 'Release'
-            dotnet-version: '8.0.x'
-            node-version: '18.x'
-
-      - name: Run tests
-        uses: ./dotnet/test
-        with:
-            directory: demo/dotnet
-        
-      - name: Lint
-        uses: ./dotnet/lint
-        with:
-            directory: demo/dotnet
-
+      - name: Run demo for dotnet actions
+        uses: ./.github/actions/demo-dotnet-actions
