@@ -5,6 +5,9 @@ const path = require('path');
 const os = require('os');
 const { run } = require('./unique-root-directories');
 
+const LINTING_REGEX = '^([^/.]+)\/';
+const TESTING_REGEX = '^([^\/]+)\/(src|tests?)\/.*\.(cs|csproj|sln)$'
+
 function withEnv(env, fn) {
   const prev = { ...process.env };
   Object.assign(process.env, env);
@@ -105,7 +108,6 @@ test('multiple duplicates across three unique roots', () => {
 });
 
 test('testing regex - matches src, test, tests variants and ignores invalid paths/extensions', () => {
-  const pattern = '^([^\\/]+)\\/(src|tests?)\\/.*\\.(cs|csproj|sln)$';
   const paths = [
     // Valid matches (src)
     'ProjectA/src/Program.cs',
@@ -132,7 +134,7 @@ test('testing regex - matches src, test, tests variants and ignores invalid path
     // Non-matching: similar but wrong extension
     'ProjectI/tests/Program.csx'
   ].join(',');
-  const r = runWith({ INPUT_PATTERN: pattern, INPUT_PATHS: paths });
+  const r = runWith({ INPUT_PATTERN: TESTING_REGEX, INPUT_PATHS: paths });
   assert.strictEqual(r.exitCode, 0);
   // Expect roots in order of first valid appearance
   assert.match(r.outputContent, /unique_root_directories=\["ProjectA","ProjectB","ProjectC","My-App","My.App"\]/);
@@ -144,7 +146,6 @@ test('testing regex - matches src, test, tests variants and ignores invalid path
 // No matches scenario for complex pattern
 
 test('testing regex: no matches returns empty array', () => {
-  const pattern = '^([^\\/]+)\\/(src|tests?)\\/.*\\.(cs|csproj|sln)$';
   const paths = [
     'Alpha/lib/File.cs', // wrong segment
     'Beta/source/Program.cs', // wrong segment name
@@ -153,7 +154,7 @@ test('testing regex: no matches returns empty array', () => {
     'Epsilon/tests/Notes.txt', // wrong extension
     'Zeta/src/Folder' // no extension
   ].join(',');
-  const r = runWith({ INPUT_PATTERN: pattern, INPUT_PATHS: paths });
+  const r = runWith({ INPUT_PATTERN: TESTING_REGEX, INPUT_PATHS: paths });
   assert.strictEqual(r.exitCode, 0);
   assert.match(r.outputContent, /unique_root_directories=\[\]/);
   const occurrences = (r.out.match(/Unique Root Directory found/g) || []).length;
@@ -161,7 +162,6 @@ test('testing regex: no matches returns empty array', () => {
 });
 
 test('Linting pattern: extracts valid roots, skips dotted/hidden/invalid, preserves order', () => {
-  const pattern = '^([^/.]+)/';
   const paths = [
     'Alpha/src/File.cs',          // match Alpha
     'Beta/tests/Test.cs',         // match Beta
@@ -178,7 +178,7 @@ test('Linting pattern: extracts valid roots, skips dotted/hidden/invalid, preser
     'Alpha/more/Deeper.cs',       // duplicate Alpha again
     '  Beta/space.cs',            // leading space trimmed -> Beta duplicate
   ].join(',');
-  const r = runWith({ INPUT_PATTERN: pattern, INPUT_PATHS: paths });
+  const r = runWith({ INPUT_PATTERN: LINTING_REGEX, INPUT_PATHS: paths });
   assert.strictEqual(r.exitCode, 0);
   // Expected unique roots in first-seen order: Alpha, Beta, Gamma, delta, my-app, my_app, Zeta
   assert.match(r.outputContent, /unique_root_directories=\["Alpha","Beta","Gamma","delta","my-app","my_app","Zeta"\]/);
@@ -187,20 +187,18 @@ test('Linting pattern: extracts valid roots, skips dotted/hidden/invalid, preser
 });
 
 test('Linting pattern: duplicates only logged once per root', () => {
-  const pattern = '^([^/.]+)/';
   const paths = [
     'Proj/one.cs', 'Proj/two.cs', 'Proj/three.cs', // same root
     'Other/file.cs', 'Other/file2.cs',              // second root duplicates
   ].join(',');
-  const r = runWith({ INPUT_PATTERN: pattern, INPUT_PATHS: paths });
+  const r = runWith({ INPUT_PATTERN: LINTING_REGEX, INPUT_PATHS: paths });
   assert.strictEqual(r.exitCode, 0);
   assert.match(r.outputContent, /unique_root_directories=\["Proj","Other"\]/);
   const occurrences = (r.out.match(/Unique Root Directory found/g) || []).length;
   assert.strictEqual(occurrences, 2);
 });
 
-test('^([^/.]+)/ pattern: no matches', () => {
-  const pattern = '^([^/.]+)/';
+test('Linting pattern: no matches', () => {
   const paths = [
     '.hidden',       // no slash, starts with dot
     'with.dot',      // no slash, has dot
@@ -209,7 +207,7 @@ test('^([^/.]+)/ pattern: no matches', () => {
     'onlyfile',      // no slash
     '/leading/slash/file', // leading slash -> first char '/'
   ].join(',');
-  const r = runWith({ INPUT_PATTERN: pattern, INPUT_PATHS: paths });
+  const r = runWith({ INPUT_PATTERN: LINTING_REGEX, INPUT_PATHS: paths });
   assert.strictEqual(r.exitCode, 0);
   assert.match(r.outputContent, /unique_root_directories=\[\]/);
   const occurrences = (r.out.match(/Unique Root Directory found/g) || []).length;
@@ -217,20 +215,18 @@ test('^([^/.]+)/ pattern: no matches', () => {
 });
 
 test('complex regex: de-duplicates root across src/test/tests variants and multiple extensions', () => {
-  const pattern = '^([^\\/]+)\\/(src|tests?)\\/.*\\.(cs|csproj|sln)$';
   const paths = [
     'ProjMix/src/Main.cs',            // .cs
     'ProjMix/tests/Unit/Spec.cs',     // duplicate root via tests
     'ProjMix/test/ProjMix.csproj',    // duplicate root via test & .csproj
     'ProjMix/src/Nested/More/App.sln' // duplicate root via .sln
   ].join(',');
-  const r = runWith({ INPUT_PATTERN: pattern, INPUT_PATHS: paths });
+  const r = runWith({ INPUT_PATTERN: TESTING_REGEX, INPUT_PATHS: paths });
   assert.strictEqual(r.exitCode, 0);
   assert.match(r.outputContent, /unique_root_directories=\["ProjMix"\]/);
 });
 
 test('complex regex: mixed unrelated valid and invalid roots preserve insertion order', () => {
-  const pattern = '^([^\\/]+)\\/(src|tests?)\\/.*\\.(cs|csproj|sln)$';
   const paths = [
     'A/src/A.cs',
     'B/tests/BSpec.cs',
@@ -243,24 +239,22 @@ test('complex regex: mixed unrelated valid and invalid roots preserve insertion 
     'I/tes/Almost.cs',      // wrong segment "tes"
     'J/src/deep/file.cs'    // valid new root
   ].join(',');
-  const r = runWith({ INPUT_PATTERN: pattern, INPUT_PATHS: paths });
+  const r = runWith({ INPUT_PATTERN: TESTING_REGEX, INPUT_PATHS: paths });
   assert.strictEqual(r.exitCode, 0);
   assert.match(r.outputContent, /unique_root_directories=\["A","B","C","D","J"\]/);
 });
 
 test('complex regex: backslash path separators do not match (ensures POSIX style required)', () => {
-  const pattern = '^([^\\/]+)\\/(src|tests?)\\/.*\\.(cs|csproj|sln)$';
   const paths = [
     'WinProj\\src\\Program.cs', // backslashes -> should NOT match
     'RealProj/src/Program.cs'      // should match
   ].join(',');
-  const r = runWith({ INPUT_PATTERN: pattern, INPUT_PATHS: paths });
+  const r = runWith({ INPUT_PATTERN: TESTING_REGEX, INPUT_PATHS: paths });
   assert.strictEqual(r.exitCode, 0);
   assert.match(r.outputContent, /unique_root_directories=\["RealProj"\]/);
 });
 
 test('complex regex: whitespace', () => {
-  const pattern = '^([^\\/]+)\\/(src|tests?)\\/.*\\.(cs|csproj|sln)$';
   const paths = [
     '  Solution1/src/Api/Program.cs',
     '   Solution1/src/Api/Program.cs',
@@ -276,7 +270,7 @@ test('complex regex: whitespace', () => {
     '  SkipSolution2/src/Api/README.md',
     '     SkipSolution3/README.md'
   ].join(',');
-  const r = runWith({ INPUT_PATTERN: pattern, INPUT_PATHS: paths });
+  const r = runWith({ INPUT_PATTERN: TESTING_REGEX, INPUT_PATHS: paths });
   assert.strictEqual(r.exitCode, 0);
   assert.match(r.outputContent, /unique_root_directories=\["Solution1","Solution2","Solution3"\]/);
 });

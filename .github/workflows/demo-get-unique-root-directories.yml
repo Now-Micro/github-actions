@@ -189,7 +189,7 @@ jobs:
         id: t12
         uses: ./get-unique-root-directories
         with:
-          pattern: '^([^\\/]+)\\/(src|tests?)\\/.*\\.(cs|csproj|sln)$'
+          pattern: '^([^\/]+)\/(src|tests?)\/.*\.(cs|csproj|sln)$'
           paths: 'Solution1/src/Api/Program.cs,Solution1/src/Api/Program.cs,Solution1/src/Api/Controllers/Home.cs,Solution1/src/Lib/Lib.cs,Solution1/src/Lib/Lib.cs,Solution1/src/Util/Helper.cs,Solution1/src/Util/Helper.cs,Solution1/src/Util/Another.cs,Solution2/tests/Util/Another.cs,Solution3/tests/Test.cs,SkipSolution1/example/tests/README.md,SkipSolution2/src/Api/README.md,SkipSolution3/README.md'
           debug-mode: 'true'
       - name: assert Solution 1,2,3 roots
