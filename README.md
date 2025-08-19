@@ -19,7 +19,7 @@ Each action follows a consistent pattern:
 6. Outputs are written by appending `name=value` lines to the file pointed to by `GITHUB_OUTPUT`.
 
 Example mapping (from `get-project-and-solution-files-from-directory`):
-- `action.yml` step runs: `node ./get-project-and-solution-files-from-directory/get-project-and-solution-files-from-directory.js`
+- `action.yml` step runs: `node "$GITHUB_ACTION_PATH/get-project-and-solution-files-from-directory.js`"
 - Inputs -> env: `INPUT_DIRECTORY`, `INPUT_MAX_DEPTH`, etc.
 - JS writes outputs: `solution-found=...`, `project-found=...`.
 - Tests exercise edge cases (depth limits, multiple matches, invalid input) for 100% coverage.
@@ -54,7 +54,7 @@ node --test --test-reporter tap | Select-String -NotMatch "ok" | Select-String -
 ## Adding a New Action
 1. Create a folder: `my-new-action/`.
 2. Write `action.yml` as a composite action. Keep logic out of the YAML; only call your JS:  
-   `run: node ./my-new-action/main.js`
+   `run: node "$GITHUB_ACTION_PATH/my-new-action/main.js`"
 3. Implement `main.js` exporting any helpers plus `run()` guarded by `if (require.main === module) run();`.
 4. Add `main.test.js` with scenarios (success, error paths, edge cases). Mock filesystem / env / process exit similarly to existing tests.
 5. Use env-based input injection (`INPUT_<UPPER_SNAKE>`). Translate in JS with `process.env.INPUT_NAME`.

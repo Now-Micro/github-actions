@@ -26,7 +26,7 @@ runs:
     - name: Determine changed project directories
       id: parse-changes
       shell: bash
-      run: node ./get-changed-files/get-changed-files.js      
+      run: node "$GITHUB_ACTION_PATH/get-changed-files.js"
       env:
         INPUT_HEAD_REF: ${{ inputs.head-ref }}
         INPUT_BASE_REF: ${{ inputs.base-ref }}

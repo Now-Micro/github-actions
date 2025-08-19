@@ -27,7 +27,7 @@ runs:
     - name: Determine changed project directories
       id: parse-changes
       shell: bash
-      run: node ./get-unique-root-directories/unique-root-directories.js
+      run: node "$GITHUB_ACTION_PATH/unique-root-directories.js"
       env:
         INPUT_DEBUG_MODE: ${{ inputs.debug-mode }}
         INPUT_PATHS: ${{ inputs.paths }}
