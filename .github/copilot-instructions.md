@@ -41,6 +41,7 @@ This repository is a monorepo of custom GitHub Composite Actions plus supporting
 ## Refactoring
 - Analyze the existing implementation.  If it makes sense to separate the code into smaller composite action, propose it to the user and ask how to proceed.
 - Make sure to follow the same file structure and patterns as outlined above.
+- Make sure to add tests for the new composite action and follow the testing conventions outlined above.
 
 ## Project-Specific Nuances
 - BFS vs DFS: Finder action intentionally uses BFS to select the shallowest matching project/solution; do not revert to DFS.
