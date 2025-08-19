@@ -2,6 +2,7 @@
 - refactor and add test + workflow: 
     -get-unique-root-directores
     -get-changed-directories
+- how can I use existing actions to replace get-changed-directories?
 - publish a new version
     - then refactor codebits to use actions
     - then refactor DICE to use actions
