@@ -23,28 +23,7 @@ runs:
     - name: Determine changed project directories
       id: parse-changes
       shell: bash
-      run: |
-        cat > unique-root-directories.js << 'EOF'
-        const { execSync } = require('child_process');
-        const fs = require('fs');
-        const path = require('path');
-        const inputPattern = process.env.INPUT_PATTERN;
-        const directories = process.env.INPUT_PATHS.split(',').map(path => path.replace(/["']/g, '')).filter(Boolean);
-        console.log(`🔍 Getting Unique Root Directories from: ${process.env.INPUT_PATHS}`);
-        console.log(`Using pattern: ${inputPattern}`);
-        const uniqueRootDirectories = Array.from(new Set(directories.map(dir => {
-          const match = dir.match(new RegExp(inputPattern));
-          if (match) {
-            console.log(`🔍 Unique Root Directory found: '${match[1]}'`);
-          }
-          return match ? match[1] : null;
-        }))).filter(Boolean);
-
-        const json = JSON.stringify(uniqueRootDirectories);
-        console.log(`🔍 Unique Root Directories: ${json}`);
-        fs.appendFileSync(process.env.GITHUB_OUTPUT, `unique_root_directories=${json}\n`);
-        EOF
-        node unique-root-directories.js
+      run: node ./get-unique-root-directories/unique-root-directories.js
       env:
         INPUT_PATHS: ${{ inputs.paths }}
         INPUT_PATTERN: ${{ inputs.pattern }}
