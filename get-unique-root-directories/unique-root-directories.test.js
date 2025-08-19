@@ -216,3 +216,46 @@ test('^([^/.]+)/ pattern: no matches', () => {
   assert.strictEqual(occurrences, 0);
 });
 
+test('complex regex: de-duplicates root across src/test/tests variants and multiple extensions', () => {
+  const pattern = '^([^\\/]+)\\/(src|tests?)\\/.*\\.(cs|csproj|sln)$';
+  const paths = [
+    'ProjMix/src/Main.cs',            // .cs
+    'ProjMix/tests/Unit/Spec.cs',     // duplicate root via tests
+    'ProjMix/test/ProjMix.csproj',    // duplicate root via test & .csproj
+    'ProjMix/src/Nested/More/App.sln' // duplicate root via .sln
+  ].join(',');
+  const r = runWith({ INPUT_PATTERN: pattern, INPUT_PATHS: paths });
+  assert.strictEqual(r.exitCode, 0);
+  assert.match(r.outputContent, /unique_root_directories=\["ProjMix"\]/);
+});
+
+test('complex regex: mixed unrelated valid and invalid roots preserve insertion order', () => {
+  const pattern = '^([^\\/]+)\\/(src|tests?)\\/.*\\.(cs|csproj|sln)$';
+  const paths = [
+    'A/src/A.cs',
+    'B/tests/BSpec.cs',
+    'C/test/C.csproj',
+    'D/src/D.sln',
+    'E/lib/E.cs',          // invalid second segment
+    'F/tests/readme.md',    // invalid extension
+    'G/src/file.CS',        // uppercase extension should NOT match (case sensitive)
+    'Hsrc/Not/Really.cs',   // missing slash after root segment pattern expects
+    'I/tes/Almost.cs',      // wrong segment "tes"
+    'J/src/deep/file.cs'    // valid new root
+  ].join(',');
+  const r = runWith({ INPUT_PATTERN: pattern, INPUT_PATHS: paths });
+  assert.strictEqual(r.exitCode, 0);
+  assert.match(r.outputContent, /unique_root_directories=\["A","B","C","D","J"\]/);
+});
+
+test('complex regex: backslash path separators do not match (ensures POSIX style required)', () => {
+  const pattern = '^([^\\/]+)\\/(src|tests?)\\/.*\\.(cs|csproj|sln)$';
+  const paths = [
+    'WinProj\\src\\Program.cs', // backslashes -> should NOT match
+    'RealProj/src/Program.cs'      // should match
+  ].join(',');
+  const r = runWith({ INPUT_PATTERN: pattern, INPUT_PATHS: paths });
+  assert.strictEqual(r.exitCode, 0);
+  assert.match(r.outputContent, /unique_root_directories=\["RealProj"\]/);
+});
+

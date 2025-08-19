@@ -177,6 +177,38 @@ jobs:
           mode: exact
           expected: '[]'
           actual: ${{ steps.t11.outputs.unique_root_directories }}
+      
+      - name: Testing pattern in Codebits
+        id: t12
+        uses: ./get-unique-root-directories
+        with:
+          pattern: '^([^\\/]+)\\/(src|tests?)\\/.*\\.(cs|csproj|sln)$'
+          paths:    'Solution1/src/Api/Program.cs, Solution1/src/Api/Program.cs, Solution1/src/Api/Controllers/Home.cs, Solution1/src/Lib/Lib.cs, Solution1/src/Lib/Lib.cs, Solution1/src/Util/Helper.cs, Solution1/src/Util/Helper.cs, Solution1/src/Util/Another.cs, Solution2/tests/Util/Another.cs, Solution3/example/tests/Test.cs, SkipSolution1/example/tests/README.md, SkipSolution2/src/Api/README.md, SkipSolution3/README.md'
+      - name: assert caret pattern no matches
+        uses: ./testing/assert
+        with:
+          test-name: 'caret no matches'
+          summary-file: ${{ steps.pre.outputs.summary_file }}
+          mode: exact
+          expected: '["Solution1","Solution2","Solution3"]'
+          actual: ${{ steps.t12.outputs.unique_root_directories }}
+
+      - name: Linting pattern in Codebits
+        id: t13
+        uses: ./get-unique-root-directories
+        with:
+          pattern: '^([^\\/]+)\\/(src|tests?)\\/.*\\.(cs|csproj|sln)$'
+          paths:    'Solution1/src/Api/Program.cs, Solution1/src/Api/Program.cs, Solution1/src/Api/Controllers/Home.cs, Solution1/src/Lib/Lib.cs, Solution1/src/Lib/Lib.cs, Solution1/src/Util/Helper.cs, Solution1/src/Util/Helper.cs, Solution1/src/Util/Another.cs, Solution2/tests/Util/Another.cs, Solution3/example/tests/Test.cs, Solution4/example/tests/README.md, Solution5/src/Api/README.md, Solution6/README.md'
+      - name: assert caret pattern no matches
+        uses: ./testing/assert
+        with:
+          test-name: 'caret no matches'
+          summary-file: ${{ steps.pre.outputs.summary_file }}
+          mode: exact
+          expected: '["Solution1","Solution2","Solution3"]'
+          actual: ${{ steps.t13.outputs.unique_root_directories }}
+
+      
       - name: Summarize
         if: always()
         run: |
