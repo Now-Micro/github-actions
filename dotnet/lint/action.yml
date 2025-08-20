@@ -3,42 +3,44 @@ description: 'Runs checks for a specific directory'
 author: 'Trafera'
 
 inputs:
-  directory:
-    description: 'Directory to run linting in'
-    required: true
-  dotnet-version:
-    description: 'Version of .NET SDK to use'
-    required: true
-    default: '6.0.x'
-  max-depth:
-    description: 'Maximum depth to search for .sln or .csproj files'
+  tools-json-path:
+    description: 'Path to the dotnet-tools.json file'
     required: false
-    default: '3'
+    default: './.config/dotnet-tools.json'
+  csharpierrc-path:
+    description: 'Path to the csharpierrc.yaml file'
+    required: false
+    default: './.config/csharpierrc.yaml'
 
 runs:
   using: 'composite'
   steps:
-    - name: Setup .NET Core SDK
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: ${{ inputs.dotnet-version }}
-
-    - name: Get solution or project file
-      id: get-solution-or-proj
-      uses: Now-Micro/actions/get-project-and-solution-files-from-directory@v1
-      with:
-        directory: ${{ inputs.directory }}
-        max-depth: ${{ inputs.max-depth }}
-        find-solution: true
-        find-project: true
-
-    - name: Check formatting
+    - name: Ensure files are present
       shell: bash
       run: |
-        PROJECT_OR_SOLUTION=${{ steps.get-solution-or-proj.outputs.solution-found || steps.get-solution-or-proj.outputs.project-found }}
-        if [ -z "$PROJECT_OR_SOLUTION" ]; then
-          echo "No .sln or .csproj found in ${{ inputs.directory }}"
-          exit 1
+        if [ ! -f "${{ inputs.csharpierrc-path }}" ]; then
+          echo "${{ inputs.csharpierrc-path }} file is missing.  Using default settings."
+          # copy over the one from this folder
+          cp "$GITHUB_ACTION_PATH/.config/csharpierrc.yaml" "${{ inputs.csharpierrc-path }}"
         fi
-        dotnet format "$PROJECT_OR_SOLUTION" --verify-no-changes
+        if [ ! -f "${{ inputs.tools-json-path }}" ]; then
+          echo "${{ inputs.tools-json-path }} file is missing.  Using default version."
+          # copy over the one from this folder
+          cp "$GITHUB_ACTION_PATH/${{ inputs.tools-json-path }}" "${{ inputs.tools-json-path }}"
+        fi
+
+    - name: Ensure Tools.Csharpier section is present
+      shell: bash
+      run: |
+        cat "${{ inputs.tools-json-path }}"
+
+    - name: Print Working Directory
+      shell: bash
+      run: pwd
+
+    - name: Run lint checks
+      shell: bash
+      run: |
+          dotnet tool restore
+          dotnet csharpier check .
   
