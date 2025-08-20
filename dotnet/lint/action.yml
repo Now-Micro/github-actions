@@ -74,6 +74,5 @@ runs:
     - name: Run lint checks
       shell: bash
       run: |
-        set -euo pipefail
-        dotnet csharpier --check '${{ inputs.directory }}'
-        echo 'CSharpier check complete'
+          dotnet tool restore
+          dotnet csharpier check 
