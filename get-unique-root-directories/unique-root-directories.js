@@ -16,7 +16,7 @@ function run() {
     if (!pattern) {
         console.error('INPUT_PATTERN is required'); process.exit(1);
     }
-    console.log(`🔍 Getting Unique Root Directories from: ${raw}`);
+    console.log(`🔍 Getting Unique Root Directories from: ${dirs}`);
     console.log(`Using pattern: ${pattern}`);
     let re;
     try {
@@ -28,12 +28,12 @@ function run() {
     const set = new Set();
     for (const d of dirs) {
         if (debugMode) {
-            console.log(`🔍 Checking directory: ${d}`);
+            console.log(`🔍 Checking if '${d}' matches the pattern...`);
         }
         const m = d.match(re);
         if (m) {
             if (debugMode) {
-                console.log(`🔍 Matched directory: ${m[1]}`);
+                console.log(`🔍 Match found: ${m}`);
             }
             if (m[1]) {
                 if (!set.has(m[1])) {
