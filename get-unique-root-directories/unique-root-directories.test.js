@@ -276,4 +276,9 @@ test('complex regex: whitespace', () => {
 });
 
 
-
+test('complex regex: whitespace', () => {
+  const paths = [".github/workflows/checks.yml","ChannelOnline/tests/Trafera.ChannelOnline.Tests/GlobalUsings.cs"].join(',');
+  const r = runWith({ INPUT_PATTERN: TESTING_REGEX, INPUT_PATHS: paths });
+  assert.strictEqual(r.exitCode, 0);
+  assert.match(r.outputContent, /unique_root_directories=\["ChannelOnline"\]/);
+});
