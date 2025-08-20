@@ -6,16 +6,29 @@ inputs:
   directory:
     description: 'Directory to run tests in'
     required: true
+  dotnet-version:
+    description: 'Version of .NET SDK to use'
+    required: true
+    default: '6.0.x'
+  max-depth:
+    description: 'Maximum depth to search for .sln or .csproj files'
+    required: false
+    default: '3'
 
 runs:
   using: 'composite'
   steps:
+    - name: Setup .NET Core SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ inputs.dotnet-version }}
+
     - name: Get solution or project file
       id: get-solution-or-proj
       uses: Now-Micro/actions/get-project-and-solution-files-from-directory@v1
       with:
         directory: ${{ inputs.directory }}
-        max-depth: '3'
+        max-depth: ${{ inputs.max-depth }}
         find-solution: true
         find-project: true
   
