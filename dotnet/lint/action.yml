@@ -3,14 +3,26 @@ description: 'Runs checks for a specific directory'
 author: 'Trafera'
 
 inputs:
-  tools-json-path:
-    description: 'Path to the dotnet-tools.json file'
-    required: false
-    default: './.config/dotnet-tools.json'
   csharpierrc-path:
     description: 'Path to the csharpierrc.yaml file'
     required: false
     default: './.config/csharpierrc.yaml'
+  csharpier-version:
+    description: 'Version of csharpier to ensure in dotnet-tools.json'
+    required: false
+    default: '1.1.2'
+  directory:
+    description: 'Directory to run csharpier against'
+    required: false
+    default: '.'
+  dotnet-version:
+    description: 'Optional dotnet version to install (e.g. 8.0.x)'
+    required: false
+    default: '8.0.x'
+  tools-json-path:
+    description: 'Path to the dotnet-tools.json file'
+    required: false
+    default: './.config/dotnet-tools.json'
 
 runs:
   using: 'composite'
@@ -42,10 +54,14 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
-        TOOLS_JSON='${{ inputs.tools-json-path }}'
-        node -e "const fs=require('fs');const f=process.env.TOOLS_JSON;const d=JSON.parse(fs.readFileSync(f,'utf8'));if(!d.tools)d.tools={};if(!d.tools.csharpier){d.tools.csharpier={version:'1.1.2',commands:['csharpier']};fs.writeFileSync(f,JSON.stringify(d,null,2)+'\n');console.log('Injected csharpier tool definition');}else{console.log('csharpier tool already present');}"
+        node -e "const fs=require('fs');const file='${{ inputs.tools-json-path }}';const ver='${{ inputs.csharpier-version }}';const d=JSON.parse(fs.readFileSync(file,'utf8'));if(!d.tools)d.tools={};if(!d.tools.csharpier){d.tools.csharpier={version:ver,commands:['csharpier']};fs.writeFileSync(file,JSON.stringify(d,null,2)+'\n');console.log('Injected csharpier tool definition '+ver);}else{console.log('csharpier tool already present '+d.tools.csharpier.version);}"
         echo '--- dotnet-tools.json ---'
-        cat "$TOOLS_JSON"
+        cat '${{ inputs.tools-json-path }}'
+
+    - name: Setup .NET (optional)
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ inputs.dotnet-version }}
 
     - name: Print Working Directory
       shell: bash
@@ -58,5 +74,6 @@ runs:
     - name: Run lint checks
       shell: bash
       run: |
-        dotnet csharpier --check .
+        set -euo pipefail
+        dotnet csharpier --check '${{ inputs.directory }}'
         echo 'CSharpier check complete'
