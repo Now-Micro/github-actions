@@ -1,9 +1,8 @@
-using Xunit;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Xunit;
 
 namespace Demo.Api.Tests
 {
-
     public class ApiTests : IClassFixture<WebApplicationFactory<Program>>
     {
         private readonly WebApplicationFactory<Program> _factory;
