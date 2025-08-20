@@ -7,18 +7,6 @@ inputs:
     description: 'Path to the csharpierrc.yaml file'
     required: false
     default: './.config/csharpierrc.yaml'
-  csharpier-version:
-    description: 'Version of csharpier to ensure in dotnet-tools.json'
-    required: false
-    default: '1.1.2'
-  directory:
-    description: 'Directory to run csharpier against'
-    required: false
-    default: '.'
-  dotnet-version:
-    description: 'Optional dotnet version to install (e.g. 8.0.x)'
-    required: false
-    default: '8.0.x'
   tools-json-path:
     description: 'Path to the dotnet-tools.json file'
     required: false
@@ -58,19 +46,10 @@ runs:
         echo '--- dotnet-tools.json ---'
         cat '${{ inputs.tools-json-path }}'
 
-    - name: Setup .NET (optional)
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: ${{ inputs.dotnet-version }}
-
     - name: Print Working Directory
       shell: bash
       run: pwd
-
-    - name: Restore tools
-      shell: bash
-      run: dotnet tool restore
-
+      
     - name: Run lint checks
       shell: bash
       run: |
