@@ -1,10 +1,25 @@
 name: Demo - Dotnet Actions (build, test, and lint)
 description: This workflow demonstrates the use of various dotnet actions for building, testing, and linting a .NET project.
 
+inputs:
+  run-build-step:
+    description: 'Run the build step (true/false)'
+    required: false
+    default: 'true'
+  run-lint-step:
+    description: 'Run the lint step (true/false)'
+    required: false
+    default: 'true'
+  run-test-step:
+    description: 'Run the test step (true/false)'
+    required: false
+    default: 'true'
+
 runs:
   using: composite
   steps:
     - name: Build
+      if: ${{ inputs.run-build-step == 'true' }}
       uses: Now-Micro/actions/dotnet/build@v1
       with:   
           solution-file: demo/dotnet/demo.sln
@@ -13,14 +28,13 @@ runs:
           node-version: '18.x'
 
     - name: Run tests
+      if: ${{ inputs.run-test-step == 'true' }}
       uses: Now-Micro/actions/dotnet/test@v1
       with:
           directory: demo/dotnet
           dotnet-version: '8.0.x'
       
     - name: Lint
+      if: ${{ inputs.run-lint-step == 'true' }}
       uses: ./dotnet/lint
-      with:
-          directory: demo/dotnet
-          dotnet-version: '8.0.x'
 

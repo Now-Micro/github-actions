@@ -3,42 +3,46 @@ description: 'Runs checks for a specific directory'
 author: 'Trafera'
 
 inputs:
-  directory:
-    description: 'Directory to run linting in'
-    required: true
-  dotnet-version:
-    description: 'Version of .NET SDK to use'
-    required: true
-    default: '6.0.x'
-  max-depth:
-    description: 'Maximum depth to search for .sln or .csproj files'
+  csharpierrc-path:
+    description: 'Path to the csharpierrc.yaml file'
     required: false
-    default: '3'
+    default: './.config/csharpierrc.yaml'
+  csharpier-version:
+    description: 'Version of CSharpier to use'
+    required: false
+    default: '1.1.2'
+  tools-json-path:
+    description: 'Path to the dotnet-tools.json file'
+    required: false
+    default: './.config/dotnet-tools.json'
 
 runs:
   using: 'composite'
   steps:
-    - name: Setup .NET Core SDK
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: ${{ inputs.dotnet-version }}
+    - name: Setup Node.js
+      uses: Now-Micro/actions/setup-node@v1
 
-    - name: Get solution or project file
-      id: get-solution-or-proj
-      uses: Now-Micro/actions/get-project-and-solution-files-from-directory@v1
-      with:
-        directory: ${{ inputs.directory }}
-        max-depth: ${{ inputs.max-depth }}
-        find-solution: true
-        find-project: true
+    - name: Ensure files are present
+      shell: bash
+      run: node "$GITHUB_ACTION_PATH/ensure-files.js"
+      env:
+        INPUT_CSHARPIERRC_PATH: ${{ inputs.csharpierrc-path }}
+        INPUT_CSHARPIER_VERSION: ${{ inputs.csharpier-version }}
+        INPUT_TOOLS_JSON_PATH: ${{ inputs.tools-json-path }}
 
-    - name: Check formatting
+    - name: Ensure csharpier tool entry present
+      shell: bash
+      run: node "$GITHUB_ACTION_PATH/ensure-csharpier-tool.js"
+      env:
+        INPUT_CSHARPIER_VERSION: ${{ inputs.csharpier-version }}
+        INPUT_TOOLS_JSON_PATH: ${{ inputs.tools-json-path }}
+
+    - name: Print Working Directory
+      shell: bash
+      run: pwd
+      
+    - name: Run lint checks
       shell: bash
       run: |
-        PROJECT_OR_SOLUTION=${{ steps.get-solution-or-proj.outputs.solution-found || steps.get-solution-or-proj.outputs.project-found }}
-        if [ -z "$PROJECT_OR_SOLUTION" ]; then
-          echo "No .sln or .csproj found in ${{ inputs.directory }}"
-          exit 1
-        fi
-        dotnet format "$PROJECT_OR_SOLUTION" --verify-no-changes
-  
+          dotnet tool restore
+          dotnet csharpier check .
