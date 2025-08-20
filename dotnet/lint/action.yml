@@ -7,6 +7,10 @@ inputs:
     description: 'Path to the csharpierrc.yaml file'
     required: false
     default: './.config/csharpierrc.yaml'
+  csharpier-version:
+    description: 'Version of CSharpier to use'
+    required: false
+    default: '1.1.2'
   tools-json-path:
     description: 'Path to the dotnet-tools.json file'
     required: false
@@ -15,36 +19,23 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    - name: Setup Node.js
+      uses: Now-Micro/actions/setup-node@v1
+
     - name: Ensure files are present
       shell: bash
-      run: |
-        set -euo pipefail
-        CSHARPIER_CFG='${{ inputs.csharpierrc-path }}'
-        TOOLS_JSON='${{ inputs.tools-json-path }}'
-        mkdir -p "$(dirname "$CSHARPIER_CFG")"
-        mkdir -p "$(dirname "$TOOLS_JSON")"
-        if [ ! -f "$CSHARPIER_CFG" ]; then
-          echo "$CSHARPIER_CFG file is missing. Creating default.";
-          printf '%s\n' 'printWidth: 120' 'useTabs: false' 'endOfLine: lf' > "$CSHARPIER_CFG"
-        else
-          echo "Found existing $CSHARPIER_CFG";
-        fi
-        if [ ! -f "$TOOLS_JSON" ]; then
-          echo "$TOOLS_JSON file is missing. Creating default.";
-          printf '%s\n' '{' '  "version": 1,' '  "isRoot": true,' '  "tools": {}' '}' > "$TOOLS_JSON"
-        else
-          echo "Found existing $TOOLS_JSON";
-        fi
-        echo 'State after ensure:'
-        ls -al "$(dirname "$TOOLS_JSON")"
+      run: node "$GITHUB_ACTION_PATH/ensure-files.js"
+      env:
+        INPUT_CSHARPIERRC_PATH: ${{ inputs.csharpierrc-path }}
+        INPUT_CSHARPIER_VERSION: ${{ inputs.csharpier-version }}
+        INPUT_TOOLS_JSON_PATH: ${{ inputs.tools-json-path }}
 
     - name: Ensure csharpier tool entry present
       shell: bash
-      run: |
-        set -euo pipefail
-        node -e "const fs=require('fs');const file='${{ inputs.tools-json-path }}';const ver='${{ inputs.csharpier-version }}';const d=JSON.parse(fs.readFileSync(file,'utf8'));if(!d.tools)d.tools={};if(!d.tools.csharpier){d.tools.csharpier={version:ver,commands:['csharpier']};fs.writeFileSync(file,JSON.stringify(d,null,2)+'\n');console.log('Injected csharpier tool definition '+ver);}else{console.log('csharpier tool already present '+d.tools.csharpier.version);}"
-        echo '--- dotnet-tools.json ---'
-        cat '${{ inputs.tools-json-path }}'
+      run: node "$GITHUB_ACTION_PATH/ensure-csharpier-tool.js"
+      env:
+        INPUT_CSHARPIER_VERSION: ${{ inputs.csharpier-version }}
+        INPUT_TOOLS_JSON_PATH: ${{ inputs.tools-json-path }}
 
     - name: Print Working Directory
       shell: bash
@@ -54,4 +45,4 @@ runs:
       shell: bash
       run: |
           dotnet tool restore
-          dotnet csharpier check 
+          dotnet csharpier check .
