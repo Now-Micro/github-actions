@@ -11,13 +11,21 @@ const TESTING_REGEX = '^([^\/]+)\/(src|tests?)\/.*\.(cs|csproj|sln)$'
 function withEnv(env, fn) {
   const prev = { ...process.env };
   Object.assign(process.env, env);
+  const showLogs = true;
   let exitCode = 0;
   const origExit = process.exit;
   process.exit = c => { exitCode = c || 0; throw new Error(`__EXIT_${exitCode}__`); };
   let out = '', err = '';
   const so = process.stdout.write, se = process.stderr.write;
-  process.stdout.write = (c, e, cb) => { out += c; return true; };
-  process.stderr.write = (c, e, cb) => { err += c; return true; };
+  if (showLogs) {
+    // Mirror output to console while capturing
+    process.stdout.write = (c, e, cb) => { out += c; return so.call(process.stdout, c, e, cb); };
+    process.stderr.write = (c, e, cb) => { err += c; return se.call(process.stderr, c, e, cb); };
+  } else {
+    // Suppress console output, capture silently
+    process.stdout.write = (c, e, cb) => { out += c; return true; };
+    process.stderr.write = (c, e, cb) => { err += c; return true; };
+  }
   try {
     try { fn(); } catch (e) { if (!/^__EXIT_/.test(e.message)) throw e; }
   } finally {
@@ -276,8 +284,8 @@ test('complex regex: whitespace', () => {
 });
 
 
-test('complex regex: whitespace', () => {
-  const paths = [".github/workflows/checks.yml","ChannelOnline/tests/Trafera.ChannelOnline.Tests/GlobalUsings.cs"].join(',');
+test('testing extra characters', () => {
+  const paths = ["[\".github/workflows/checks.yml\"","[\"ChannelOnline/tests/Trafera.ChannelOnline.Tests/GlobalUsings.cs]\""].join(',');
   const r = runWith({ INPUT_PATTERN: TESTING_REGEX, INPUT_PATHS: paths });
   assert.strictEqual(r.exitCode, 0);
   assert.match(r.outputContent, /unique_root_directories=\["ChannelOnline"\]/);

@@ -2,27 +2,20 @@ const fs = require('fs');
 
 function run() {
     const pattern = process.env.INPUT_PATTERN;
-    const debugMode = process.env.INPUT_DEBUG_MODE === 'true';
+    const debugMode = process.env.INPUT_DEBUG_MODE ? process.env.INPUT_DEBUG_MODE : true;
     const raw = process.env.INPUT_PATHS || '';
+    // remove ALL occurrences of [, ], ', and " characters throughout each segment
+    const dirs = raw.split(',').map(s => s.trim().replace(/["'\[\]]/g, '')).filter(Boolean)
 
     if (debugMode) {
         console.log(`🔍 Debug mode is ON`);
         console.log(`🔍 INPUT_PATTERN: ${pattern}`);
         console.log(`🔍 INPUT_PATHS: ${raw}`);
+        console.log(`🔍 Cleaned dirs: ${dirs}`);
     }
     if (!pattern) {
         console.error('INPUT_PATTERN is required'); process.exit(1);
     }
-    const dirs = raw.split(',').map(s => {
-        if (debugMode) {
-            console.log(`🔍 Processing path: ${s}`);
-        }
-        const afterProcessing = s.trim().replace(/^["']|["']$/g, '')
-        if (debugMode) {
-            console.log(`🔍 Processed path: ${afterProcessing}`);
-        }
-        return afterProcessing;
-    }).filter(Boolean);
     console.log(`🔍 Getting Unique Root Directories from: ${raw}`);
     console.log(`Using pattern: ${pattern}`);
     let re;
