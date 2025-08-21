@@ -19,7 +19,7 @@ runs:
 
     - name: Get Project and Solution Files
       id: get-project-and-solution-files
-      uses: Now-Micro/actions/dotnet/get-project-and-solution-files-from-directory@v1
+      uses: Now-Micro/actions/get-project-and-solution-files-from-directory@v1
       with:
         directory: ${{ inputs.directory }}
 
