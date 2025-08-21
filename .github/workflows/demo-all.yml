@@ -3,6 +3,15 @@ on:
   workflow_dispatch:
 
 jobs:
+ demo-code-standards:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Run demo for code-standards
+        uses: ./.github/actions/demo-code-standards
+
   demo-dotnet:
     runs-on: ubuntu-latest
     steps:
