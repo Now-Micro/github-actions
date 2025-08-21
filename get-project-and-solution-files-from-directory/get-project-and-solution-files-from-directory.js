@@ -86,8 +86,12 @@ function run() {
     // Use BFS to prioritize shallower files (ensures AppA.csproj preferred over deep project)
     searchBFS(inputDir, maxDepth, findSolution, findProject);
 
-    console.log(`Project found: ${projectFound || 'None'}`);
-    console.log(`Solution found: ${solutionFound || 'None'}`);
+    if (findProject) {
+      console.log(`Project found: ${projectFound || 'None'}`);
+    }
+    if (findSolution) {
+      console.log(`Solution found: ${solutionFound || 'None'}`);
+    }
 
     if (githubOutput) {
       if (solutionFound && solutionFound.endsWith('.sln')) { dlog(`Writing solution-found output: ${solutionFound}`); fs.appendFileSync(githubOutput, `solution-found=${solutionFound}\n`); }
