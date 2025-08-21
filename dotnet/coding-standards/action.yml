@@ -42,8 +42,8 @@ runs:
         echo "Project File: ${{ steps.get-project-and-solution-files.outputs.project-found }}"
         echo "Derived Root: $ROOT"
         mkdir -p "$ROOT/Demo.Analyzers"
-        cp "./demo/coding-standards/.editorconfig" "$ROOT/.editorconfig"
-        cp -R ./demo/coding-standards/analyzers/Demo.Analyzers/. "$ROOT/Demo.Analyzers/"
+        cp -f "./demo/coding-standards/.editorconfig" "$ROOT/.editorconfig"
+        cp -fR ./demo/coding-standards/analyzers/Demo.Analyzers/. "$ROOT/Demo.Analyzers/"
         ls -al "$ROOT"
     # Todo: move this into Nodejs?
     # - name: Add ItemGroup to Solution
