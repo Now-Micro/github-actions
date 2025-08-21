@@ -10,6 +10,7 @@ runs:
       uses: ./dotnet/coding-standards
       with:
         directory: './demo/coding-standards'
+        debug-mode: 'true'
 
 
 

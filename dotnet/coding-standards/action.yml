@@ -3,6 +3,10 @@ description: 'Ensure coding standards are met using analyzers'
 author: 'Trafera'
 
 inputs:
+  debug-mode:
+    description: 'Enable debug mode for additional logging.'
+    required: false
+    default: 'false'
   directory:
     description: 'Directory to run coding standards checks in.  This should be the root directory of your .NET solution.'
     required: true
@@ -24,7 +28,7 @@ runs:
       uses: Now-Micro/actions/get-project-and-solution-files-from-directory@v1
       with:
         directory: ${{ inputs.directory }}
-        debug-mode: 'true'
+        debug-mode: ${{ inputs.debug-mode }}
 
     - name: Get Solution Root Directory
       id: get-solution-root-directory
@@ -32,6 +36,8 @@ runs:
       with:
         pattern: '^(.*)\/.*\.sln$'
         paths: ${{ steps.get-project-and-solution-files.outputs.solution-found }}
+        debug-mode: ${{ inputs.debug-mode }}
+
     - name: Copy Relevant Files
       shell: bash
       run: node "$GITHUB_ACTION_PATH/copy-relevant-files.js"
