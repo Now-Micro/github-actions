@@ -29,7 +29,7 @@ runs:
       with:
         directory: ${{ inputs.directory }}
         debug-mode: ${{ inputs.debug-mode }}
-        max-depth: '3'
+        max-depth: '5'
 
     - name: Get Solution Root Directory
       id: get-solution-root-directory
