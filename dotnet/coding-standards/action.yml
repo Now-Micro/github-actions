@@ -47,7 +47,7 @@ runs:
         echo "Derived Root: $ROOT"
         SRC_DIR="./demo/coding-standards"
         # Ensure target directories exist
-        mkdir -p "$ROOT" "$ROOT/Demo.Analyzers"
+        mkdir -p "$ROOT" "$ROOT/${{ inputs.code-analyzers-name }}$" "$ROOT/${{ inputs.code-analyzers-name }}$/Demo.Analyzers"
         # Resolve absolute paths to safely compare
         src_abs=$(cd "$SRC_DIR" && pwd)
         root_abs=$(cd "$ROOT" && pwd)
@@ -60,17 +60,49 @@ runs:
         else
           cp -f "$SRC_DIR/.editorconfig" "$DEST_FILE"
         fi
-        # Always refresh analyzers into target (different subpath)
-        cp -fR "$SRC_DIR/analyzers/Demo.Analyzers/." "$ROOT/${{ inputs.code-analyzers-name }}/"
+        # Always refresh analyzers into target (matching injected path)
+        cp -fR "$SRC_DIR/analyzers/Demo.Analyzers/." "$ROOT/${{ inputs.code-analyzers-name }}$/Demo.Analyzers/"
         ls -al "$ROOT"
 
-    # Todo: move this into Nodejs?
-    # - name: Add ItemGroup to Solution
-    #   shell: bash
-    #   run: dotnet sln add ./Demo.Analyzers/Demo.Analyzers.csproj
+    - name: Inject Analyzer ProjectReference
+      shell: bash
+      run: |
+        set -euo pipefail
+        PROJ='${{ steps.get-project-and-solution-files.outputs.project-found }}'
+        if [ -z "$PROJ" ] || [ ! -f "$PROJ" ]; then
+          echo "No project file found to modify"; exit 0;
+        fi
+        # Skip if an Analyzer ProjectReference already exists
+        if grep -q 'OutputItemType="Analyzer"' "$PROJ"; then
+          echo "Analyzer ProjectReference already present; skipping insert"; exit 0;
+        fi
+        inc_path="..\\..\\${{ inputs.code-analyzers-name }}$\\Demo.Analyzers\\Demo.Analyzers.csproj"
+        tmpinj="$(mktemp)"
+        {
+          echo '  <ItemGroup>'
+          echo '    <ProjectReference'
+          echo "      Include=\"$inc_path\""
+          echo '      OutputItemType="Analyzer"'
+          echo '      ReferenceOutputAssembly="false"'
+          echo '    />'
+          echo '  </ItemGroup>'
+        } > "$tmpinj"
+        tmpfile="$(mktemp)"
+        awk -v injfile="$tmpinj" '
+          BEGIN {
+            while ((getline line < injfile) > 0) { inj = inj line ORS }
+            close(injfile)
+            done=0
+          }
+          /<\/Project>/ && !done { printf "%s", inj; done=1 }
+          { print }
+        ' "$PROJ" > "$tmpfile"
+        mv "$tmpfile" "$PROJ"
+        echo "Inserted Analyzer ProjectReference into $PROJ"
+        cat "$PROJ"
 
     - name: Build Solution
       shell: bash
-      run: dotnet build ${{ inputs.directory }}
+      run: dotnet build ${{ steps.get-project-and-solution-files.outputs.solution-found }}
 
     # todo: need to remove the copied over files
