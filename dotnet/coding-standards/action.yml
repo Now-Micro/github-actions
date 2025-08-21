@@ -55,24 +55,18 @@ runs:
       shell: bash
       run: |
         ls "${{ steps.get-solution-root-directory.outputs.unique_root_directories }}" -al
-
-      # todo: finish this
-      # This step has to various inputs (e.g. the path to the  ["./demo/coding-standards"], ./ ) as the ROOT_DIR
-      # and the PROJECT_FILE_PATH ["/home/runner/work/actions/actions/demo/coding-standards/SomeProject.csproj"]
-      # and return a path to the modified project file with the injected ProjectReference
-      # e.g. /home/runner/work/actions/actions/demo/coding-standards/SomeProject.csproj
-    - name: Get the INPUT_INCLUDE_PATH
-      id: get-include-path
+  
+    - name: Get Relative Path
+      id: get-relative-path
       shell: bash
-      run: |
-        echo "include_path=${{ steps.get-solution-root-directory.outputs.unique_root_directories }}"  >> $GITHUB_OUTPUT
+      run: node "$GITHUB_ACTION_PATH/relative-path-finder.js"
 
     - name: Inject Analyzer ProjectReference
       shell: bash
       run: node "$GITHUB_ACTION_PATH/inject-analyzer-reference.js"
       env:
         INPUT_CODE_ANALYZERS_NAME: ${{ inputs.code-analyzers-name }}
-        INPUT_INCLUDE_PATH: ${{ steps.get-include-path.outputs.include_path }}
+        INPUT_RELATIVE_PATH: ${{ steps.get-relative-path.outputs.relative_path }}/something.here.csproj
         INPUT_PROJECT_FILE: ${{ steps.get-project-and-solution-files.outputs.project-found }}
 
     - name: Restore

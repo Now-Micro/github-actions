@@ -27,7 +27,7 @@ function run() {
 
     // Prefer an explicit include path, otherwise fall back to the default location under the analyzers folder
 
-    log(includePath);
+    log(`includePath: ${includePath}`);
     // If an Analyzer reference already exists, skip to avoid duplicates
     if (original.includes('OutputItemType="Analyzer"') || original.includes(includePath)) {
         log('Analyzer ProjectReference already present; skipping insert');

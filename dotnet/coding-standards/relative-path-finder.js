@@ -1,0 +1,58 @@
+#!/usr/bin/env node
+const fs = require('fs');
+const path = require('path');
+
+function log(msg) { process.stdout.write(String(msg) + '\n'); }
+function err(msg) { process.stderr.write(String(msg) + '\n'); }
+
+function sanitize(p) {
+  if (p == null) return '';
+  let s = String(p).trim();
+  // strip surrounding [ ... ] if present
+  if (s.startsWith('[') && s.endsWith(']')) s = s.slice(1, -1);
+  return s;
+}
+
+function normalizeToPosix(p) {
+  return sanitize(p).replace(/\\/g, '/');
+}
+
+function computeRelative(rootFile, subdirectoryFile) {
+  const root = normalizeToPosix(rootFile);
+  const sub = normalizeToPosix(subdirectoryFile);
+  if (!root || !sub) throw new Error('Both INPUT_ROOT_FILE and INPUT_SUBDIRECTORY_FILE are required');
+  if (root.includes(',')) throw new Error('INPUT_ROOT_FILE contains a comma, which is not allowed');
+  if (sub.includes(',')) throw new Error('INPUT_SUBDIRECTORY_FILE contains a comma, which is not allowed');
+
+  // Compare directories (not file-to-file) to match expected depth semantics
+  const rootDir = path.posix.dirname(root);
+  const subDir = path.posix.dirname(sub);
+  const rel = path.posix.relative(subDir, rootDir); // e.g., '..', '../..', '../../..'
+  if (!rel) return '';
+  const ups = rel.split('/').filter(s => s === '..').length;
+  if (ups <= 0) return '';
+  return '../'.repeat(ups);
+}
+
+function appendGithubOutput(name, value) {
+  const of = process.env.GITHUB_OUTPUT;
+  if (!of) return;
+  try { fs.appendFileSync(of, `${name}=${value}\n`); } catch {}
+}
+
+function run() {
+  const rootFile = process.env.INPUT_ROOT_FILE || '';
+  const subFile = process.env.INPUT_SUBDIRECTORY_FILE || '';
+  try {
+    const rel = computeRelative(rootFile, subFile);
+    log(rel);
+    appendGithubOutput('relative_path', rel);
+  } catch (e) {
+    err(e && e.message ? e.message : String(e));
+    process.exit(1);
+  }
+}
+
+if (require.main === module) run();
+
+module.exports = { run, computeRelative, sanitize, normalizeToPosix };
