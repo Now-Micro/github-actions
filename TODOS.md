@@ -1,6 +1,12 @@
 - demo/linting (finish):
-    - string standard
     - namesspace standard
+    - figure out how to inject  <ItemGroup>
+    <ProjectReference
+      Include="..\..\${{ inputs.code-analyzers-name }}$\Demo.Analyzers\Demo.Analyzers.csproj"
+      OutputItemType="Analyzer"
+      ReferenceOutputAssembly="false"
+    />
+  </ItemGroup>
     - address # Todo: change when done in demo-coding-standards.yml
 
 - make sure that CSharpier adheres to standards [here](https://github.com/Now-Micro/CodeBits/blob/main/.github/copilot-instructions.md)
