@@ -38,8 +38,8 @@ runs:
         echo "Solution File: ${{ steps.get-project-and-solution-files.outputs.solution-found }}"
         echo "Solution Root Directory: ${{ steps.get-solution-root-directory.outputs.unique_root_directories }}"
 
-        cp "./demo/coding-standards/.editorconfig" ${{ steps.get }}
-        cp -R "./demo/coding-standards/analyzers/Demo.Analyzers" ${{ inputs.directory }}/Demo.Analyzers
+        cp "./demo/coding-standards/.editorconfig" ${{ steps.get-solution-root-directory.outputs.unique_root_directories }}
+        cp -R "./demo/coding-standards/analyzers/Demo.Analyzers" ${{ steps.get-solution-root-directory.outputs.unique_root_directories }}/Demo.Analyzers
         ls ${{ inputs.directory }} -la
 
     # Todo: move this into Nodejs?
