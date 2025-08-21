@@ -41,9 +41,23 @@ runs:
         echo "Solution File: ${{ steps.get-project-and-solution-files.outputs.solution-found }}"
         echo "Project File: ${{ steps.get-project-and-solution-files.outputs.project-found }}"
         echo "Derived Root: $ROOT"
-        mkdir -p "$ROOT/Demo.Analyzers"
-        cp -f "./demo/coding-standards/.editorconfig" "$ROOT"
-        cp -fR ./demo/coding-standards/analyzers/Demo.Analyzers/. "$ROOT/Demo.Analyzers/"
+        SRC_DIR="./demo/coding-standards"
+        # Ensure target directories exist
+        mkdir -p "$ROOT" "$ROOT/Demo.Analyzers"
+        # Resolve absolute paths to safely compare
+        src_abs=$(cd "$SRC_DIR" && pwd)
+        root_abs=$(cd "$ROOT" && pwd)
+        echo "Source Dir: $src_abs"
+        echo "Root Dir:   $root_abs"
+        # Copy .editorconfig only if contents differ (or destination missing)
+        DEST_FILE="$ROOT/.editorconfig"
+        if [ -f "$DEST_FILE" ] && cmp -s "$SRC_DIR/.editorconfig" "$DEST_FILE"; then
+          echo ".editorconfig is up to date; skipping copy"
+        else
+          cp -f "$SRC_DIR/.editorconfig" "$DEST_FILE"
+        fi
+        # Always refresh analyzers into target (different subpath)
+        cp -fR "$SRC_DIR/analyzers/Demo.Analyzers/." "$ROOT/Demo.Analyzers/"
         ls -al "$ROOT"
     # Todo: move this into Nodejs?
     # - name: Add ItemGroup to Solution
