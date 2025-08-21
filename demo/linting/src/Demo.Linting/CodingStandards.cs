@@ -12,11 +12,11 @@ namespace Demo.Linting
             foreach (var customerId in customerIds)
             {
                 // Preferred interpolation
-                Logger.LogDebug($"Processing request for customer {customerId}");
+                Logger.LogDebug($"This approach is desirable: {customerId}");
 
                 // Non‑preferred forms (left commented for illustrative purposes)
-                // Logger.LogDebug("Processing request for customer " + customerId);
-                // Logger.LogDebug(string.Format("Processing request for customer {0}", customerId));
+                Logger.LogDebug("This should not be used: " + customerId);
+                Logger.LogDebug(string.Format("This is also frowned upon {0}", customerId));
 
                 if (customerId < 0)
                     throw new ArgumentException("Customer ID cannot be negative.");
