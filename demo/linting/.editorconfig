@@ -1,0 +1,10 @@
+root = true
+
+[*.cs]
+dotnet_diagnostic.VSTHRD103.severity = error
+# Example custom severity adjustments
+# dotnet_diagnostic.MA0089.severity = error
+
+[*.vue]
+indent_style = space
+indent_size = 2
