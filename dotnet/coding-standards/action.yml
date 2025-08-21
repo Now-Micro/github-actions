@@ -25,13 +25,12 @@ runs:
       uses: actions/setup-dotnet@v4
     - name: Get Project and Solution Files
       id: get-project-and-solution-files
-      # todo: use this when done
-      # uses: Now-Micro/actions/get-project-and-solution-files-from-directory@v1
-      uses: ./get-project-and-solution-files-from-directory
+      uses: Now-Micro/actions/get-project-and-solution-files-from-directory@v1
       with:
         directory: ${{ inputs.directory }}
         debug-mode: ${{ inputs.debug-mode }}
-        max-depth: '5'
+        find-project: 'true'
+        max-depth: '3'
 
     - name: Get Solution Root Directory
       id: get-solution-root-directory
