@@ -5,7 +5,9 @@ runs:
   using: composite
   steps:
     - name: Build with Code Standards
-      uses: Now-Micro/actions/dotnet/coding-standards@v1
+      # Todo: change when done
+      # uses: Now-Micro/actions/dotnet/coding-standards@v1
+      uses: ./dotnet/coding-standards
       with:
         directory: './demo/coding-standards'
 

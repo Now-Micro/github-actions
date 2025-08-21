@@ -1,6 +1,7 @@
 - demo/linting (finish):
     - string standard
     - namesspace standard
+    - address # Todo: change when done in demo-coding-standards.yml
 
 - make sure that CSharpier adheres to standards [here](https://github.com/Now-Micro/CodeBits/blob/main/.github/copilot-instructions.md)
 - publish the newest from actions repo as v1 (regarding the get-unique-directories changes).  

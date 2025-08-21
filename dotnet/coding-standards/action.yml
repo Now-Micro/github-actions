@@ -16,13 +16,31 @@ runs:
     
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
+
+    - name: Get Project and Solution Files
+      id: get-project-and-solution-files
+      uses: Now-Micro/actions/dotnet/get-project-and-solution-files-from-directory@v1
+      with:
+        directory: ${{ inputs.directory }}
+
+    - name: Get Solution Root Directory
+      id: get-solution-root-directory
+      uses: Now-Micro/actions/get-unique-root-directories@v1
+      with:
+        pattern: '$(.*)\/.*\.sln$'
+        paths: ${{ steps.get-project-and-solution-files.outputs.solution-found }}
     
     - name: Copy Relevant Files
       shell: bash
       run: |
-        cp "./demo/coding-standards/.editorconfig" .
-        cp -R "./demo/coding-standards/analyzers/Demo.Analyzers" ./Demo.Analyzers
-        ls ./demo/coding-standards -la
+        echo "Directory: ${{ inputs.directory }}"
+        echo "Project File: ${{ steps.get-project-and-solution-files.outputs.project-found }}"
+        echo "Solution File: ${{ steps.get-project-and-solution-files.outputs.solution-found }}"
+        echo "Solution Root Directory: ${{ steps.get-solution-root-directory.outputs.unique_root_directories }}"
+
+        cp "./demo/coding-standards/.editorconfig" ${{ steps.get }}
+        cp -R "./demo/coding-standards/analyzers/Demo.Analyzers" ${{ inputs.directory }}/Demo.Analyzers
+        ls ${{ inputs.directory }} -la
 
     # Todo: move this into Nodejs?
     # - name: Add ItemGroup to Solution
