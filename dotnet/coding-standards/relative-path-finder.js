@@ -8,8 +8,8 @@ function err(msg) { process.stderr.write(String(msg) + '\n'); }
 function sanitize(p) {
   if (p == null) return '';
   let s = String(p).trim();
-  // strip surrounding [ ... ] if present
-  if (s.startsWith('[') && s.endsWith(']')) s = s.slice(1, -1);
+  // Remove all bracket characters anywhere in the string for robustness
+  s = s.replace(/[\[\]\'\"]/g, '');
   return s;
 }
 
@@ -31,7 +31,11 @@ function computeRelative(rootFile, subdirectoryFile) {
   if (!rel) return '';
   const ups = rel.split('/').filter(s => s === '..').length;
   if (ups <= 0) return '';
-  return '../'.repeat(ups);
+
+  const sepOut = path.sep; // platform-specific ('/' on POSIX, '\\' on Windows)
+  let out = new Array(ups).fill('..').join(sepOut) + sepOut; // e.g., '../' or '..\'
+  console.log(`relative path: '${out}'`);
+  return out;
 }
 
 function appendGithubOutput(name, value) {

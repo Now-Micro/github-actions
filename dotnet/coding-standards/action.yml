@@ -3,6 +3,10 @@ description: 'Ensure coding standards are met using analyzers'
 author: 'Trafera'
 
 inputs:
+  code-analyzers-name:
+    description: 'Name of the code analyzers project to copy to the target directory.'
+    required: false
+    default: 'CodeStandards.Analyzers'
   debug-mode:
     description: 'Enable debug mode for additional logging.'
     required: false
@@ -10,10 +14,6 @@ inputs:
   directory:
     description: 'Directory to run coding standards checks in.  This should be the root directory of your .NET solution.'
     required: true
-  code-analyzers-name:
-    description: 'Name of the code analyzers project to copy to the target directory.'
-    required: false
-    default: 'CodeStandards.Analyzers'
 
 runs:
   using: 'composite'

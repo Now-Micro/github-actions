@@ -72,5 +72,5 @@ node --test --test-reporter tap | Select-String -NotMatch "ok" | Select-String -
 - Windows path issues: prefer forward slashes only when interacting with Git commands; use `path.join` elsewhere.
 - Depth logic: remember `currentDepth > maxDepth` guard; tests should cover boundary (`maxDepth` exactly meets the target directory).
 
-## License
-Internal / TBD.
+## Notes
+These actions have only been tested on Linux runners.
