@@ -24,6 +24,8 @@ runs:
       uses: Now-Micro/actions/get-project-and-solution-files-from-directory@v1
       with:
         directory: ${{ inputs.directory }}
+        debug-mode: 'true'
+
     - name: Get Solution Root Directory
       id: get-solution-root-directory
       uses: Now-Micro/actions/get-unique-root-directories@v1
