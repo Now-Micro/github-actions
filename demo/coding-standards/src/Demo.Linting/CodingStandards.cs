@@ -26,6 +26,7 @@ namespace Demo.Linting
 
         public void BracesStandards()
         {
+            // Always use braces for if statements
             if (true)
                 throw new ArgumentException("Customer ID cannot be negative.");
         }
