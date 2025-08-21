@@ -52,7 +52,7 @@ runs:
     - name: Print Solution Root Directory
       shell: bash
       run: |
-        echo "${{ steps.get-solution-root-directory.outputs.unique_root_directories }}"
+        ls "${{ steps.get-solution-root-directory.outputs.unique_root_directories }}" -al
 
       # todo: finish this
     - name: Get the INPUT_INCLUDE_PATH
