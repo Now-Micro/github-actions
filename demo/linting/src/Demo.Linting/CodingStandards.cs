@@ -2,28 +2,25 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Demo.Linting;
-
-public class CodingStandards
+namespace Demo.Linting
 {
-    // Demonstrates style rules (string interpolation preferred, braces required)
-    public async Task SequentialExecutionAsync(IEnumerable<int> customerIds)
+    public class CodingStandards
     {
-        foreach (var customerId in customerIds)
+        // Demonstrates style rules (string interpolation preferred, braces required)
+        public async Task SequentialExecutionAsync(IEnumerable<int> customerIds)
         {
-            // Preferred interpolation
-            Logger.LogDebug($"Processing request for customer {customerId}");
-
-            // Non‑preferred forms (left commented for illustrative purposes)
-            // Logger.LogDebug("Processing request for customer " + customerId);
-            // Logger.LogDebug(string.Format("Processing request for customer {0}", customerId));
-
-            if (customerId < 0)
+            foreach (var customerId in customerIds)
             {
-                throw new ArgumentException("Customer ID cannot be negative.");
-            }
+                // Preferred interpolation
+                Logger.LogDebug($"Processing request for customer {customerId}");
 
-            await Task.Delay(1).ConfigureAwait(false);
+                // Non‑preferred forms (left commented for illustrative purposes)
+                // Logger.LogDebug("Processing request for customer " + customerId);
+                // Logger.LogDebug(string.Format("Processing request for customer {0}", customerId));
+
+                if (customerId < 0)
+                    throw new ArgumentException("Customer ID cannot be negative.");
+            }
         }
     }
 }
