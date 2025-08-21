@@ -66,4 +66,4 @@ runs:
 
     - name: Build Solution
       shell: bash
-      run: dotnet build ${{ inputs.directory }} --no-restore
+      run: dotnet build ${{ inputs.directory }}
