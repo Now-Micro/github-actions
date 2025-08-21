@@ -27,7 +27,7 @@ runs:
       id: get-solution-root-directory
       uses: Now-Micro/actions/get-unique-root-directories@v1
       with:
-        pattern: '$(.*)\/.*\.sln$'
+        pattern: '^(.*)\/.*\.sln$'
         paths: ${{ steps.get-project-and-solution-files.outputs.solution-found }}
     
     - name: Copy Relevant Files
