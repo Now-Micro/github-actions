@@ -2,6 +2,13 @@ root = true
 
 [*.cs]
 dotnet_diagnostic.VSTHRD103.severity = error
+# Enforce braces on all control blocks
+dotnet_diagnostic.IDE0011.severity = error
+csharp_prefer_braces = true:error
+# Prefer string interpolation over concatenation / string.Format
+csharp_style_prefer_interpolated_string_expression = true:error
+# (Fallback key for older analyzers)
+dotnet_style_prefer_string_interpolation = true:error
 # Example custom severity adjustments
 # dotnet_diagnostic.MA0089.severity = error
 

@@ -3,23 +3,23 @@ using System.Threading.Tasks;
 
 namespace Demo.Linting;
 
-public class LintingExamples
+public class FixesNeeded
 {
     private readonly List<int> _customerIds = new() { 1, 2, 3 };
 
     private async Task<string> GetCustomerAsync(int id)
     {
-        await Task.Delay(10); // Simulate I/O
-        return id.ToString();
+        await Task.Delay(10).ConfigureAwait(false); // Simulate I/O
+        return id.ToString(System.Globalization.CultureInfo.InvariantCulture);
     }
 
-    // Intentionally sequential to allow analyzer to flag pattern (await inside loop)
-    public async Task SequentialExecution()
+    // Intentional sequential awaits for analyzer testing
+    public async Task SequentialExecutionAsync()
     {
         var results = new List<string>();
         foreach (var id in _customerIds)
         {
-            var result = await GetCustomerAsync(id); // Sequential await
+            var result = await GetCustomerAsync(id).ConfigureAwait(false); // Sequential await
             results.Add(result);
         }
     }
