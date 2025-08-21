@@ -32,7 +32,7 @@ runs:
         paths: ${{ steps.get-project-and-solution-files.outputs.solution-found }}
     - name: Copy Relevant Files
       shell: bash
-      run: node ./dotnet/coding-standards/copy-relevant-files.js
+      run: node "$GITHUB_ACTION_PATH/copy-relevant-files.js"
       env:
         INPUT_UNIQUE_ROOT_DIRECTORIES: ${{ steps.get-solution-root-directory.outputs.unique_root_directories }}
         INPUT_DIRECTORY: ${{ inputs.directory }}
@@ -43,13 +43,21 @@ runs:
       shell: bash
       run: |
         echo "${{ steps.get-solution-root-directory.outputs.unique_root_directories }}"
-    
+
+      # todo: finish this
+    - name: Get the INPUT_INCLUDE_PATH
+      id: get-include-path
+      shell: bash
+      run: |
+        echo "include_path=${{ steps.get-solution-root-directory.outputs.unique_root_directories }}"  >> $GITHUB_OUTPUT
+
     - name: Inject Analyzer ProjectReference
       shell: bash
-      run: node ./dotnet/coding-standards/inject-analyzer-reference.js
+      run: node "$GITHUB_ACTION_PATH/inject-analyzer-reference.js"
       env:
-        INPUT_PROJECT_FILE: ${{ steps.get-project-and-solution-files.outputs.project-found }}
         INPUT_CODE_ANALYZERS_NAME: ${{ inputs.code-analyzers-name }}
+        INPUT_INCLUDE_PATH: ${{ steps.get-include-path.outputs.include_path }}
+        INPUT_PROJECT_FILE: ${{ steps.get-project-and-solution-files.outputs.project-found }}
 
     - name: Restore
       shell: bash

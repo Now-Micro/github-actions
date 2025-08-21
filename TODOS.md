@@ -2,7 +2,7 @@
     - namesspace standard
     - figure out how to inject  <ItemGroup>
     <ProjectReference
-      Include="..\..\${{ inputs.code-analyzers-name }}$\Demo.Analyzers\Demo.Analyzers.csproj"
+      Include="..\..\${{ inputs.code-analyzers-name }}\Demo.Analyzers.csproj"
       OutputItemType="Analyzer"
       ReferenceOutputAssembly="false"
     />
