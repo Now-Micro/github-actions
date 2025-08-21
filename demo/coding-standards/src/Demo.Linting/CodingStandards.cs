@@ -24,9 +24,9 @@ namespace Demo.Linting
             }
         }
 
-        public void BracesStandards(IEnumerable<int> customerIds)
+        public void BracesStandards()
         {
-            if (customerId < 0)
+            if (true)
                 throw new ArgumentException("Customer ID cannot be negative.");
         }
     }
