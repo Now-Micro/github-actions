@@ -3,7 +3,7 @@ description: 'Build solution with .NET and Node.js components'
 inputs:
   azure-devops-password:
     description: 'Personal Access Token for Azure DevOps authentication'
-    required: true
+    required: false
   build-configuration:
     description: 'Build configuration (Release/Debug)'
     required: false
@@ -14,7 +14,7 @@ inputs:
     default: '6.0.x'
   github-packages-token:
     description: 'Personal Access Token for GitHub Packages authentication'
-    required: true
+    required: false
   node-version:
     description: 'Node.js version to use'
     required: false

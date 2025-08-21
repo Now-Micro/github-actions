@@ -1,0 +1,11 @@
+name: Demo - Code Standards
+description: This workflow demonstrates how to enforce code standards in a .NET and Node.js project.
+
+runs:
+  using: composite
+  steps:
+    - name: Build with Code Standards
+      uses: Now-Micro/actions/dotnet/coding-standards@v1
+
+
+

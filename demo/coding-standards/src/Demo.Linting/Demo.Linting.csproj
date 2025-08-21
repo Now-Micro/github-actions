@@ -8,11 +8,13 @@
     <AnalysisLevel>latest-all</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
   </PropertyGroup>
-  <ItemGroup>
+
+  <!-- Uncomment this when testing locally -->
+  <!-- <ItemGroup>
     <ProjectReference
       Include="..\..\analyzers\Demo.Analyzers\Demo.Analyzers.csproj"
       OutputItemType="Analyzer"
       ReferenceOutputAssembly="false"
     />
-  </ItemGroup>
+  </ItemGroup> -->
 </Project>
