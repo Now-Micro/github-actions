@@ -3,13 +3,11 @@ root = true
 [*.cs]
 dotnet_diagnostic.VSTHRD103.severity = error
 # Enforce braces on all control blocks
-dotnet_diagnostic.IDE0011.severity = error
 csharp_prefer_braces = true:error
+dotnet_diagnostic.IDE0011.severity = error
 # Prefer string interpolation
 dotnet_style_prefer_string_interpolation = true:error
 csharp_style_prefer_interpolated_string_expression = true:error
-# Custom await-in-loop analyzer
-dotnet_diagnostic.DA0001.severity = error
 
 [*.vue]
 indent_style = space

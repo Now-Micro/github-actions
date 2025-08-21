@@ -4,5 +4,23 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest-all</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference
+      Include="..\..\analyzers\Demo.Analyzers\Demo.Analyzers.csproj"
+      OutputItemType="Analyzer"
+      ReferenceOutputAssembly="false"
+    />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Meziantou.Analyzer" Version="2.0.149" PrivateAssets="all" />
+    <PackageReference
+      Include="Microsoft.VisualStudio.Threading.Analyzers"
+      Version="17.9.28"
+      PrivateAssets="all"
+    />
+  </ItemGroup>
 </Project>

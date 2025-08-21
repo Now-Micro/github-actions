@@ -7,7 +7,7 @@ namespace Demo.Linting
     public class CodingStandards
     {
         // Demonstrates style rules (string interpolation preferred, braces required)
-        public async Task SequentialExecutionAsync(IEnumerable<int> customerIds)
+        public void SequentialExecution(IEnumerable<int> customerIds)
         {
             foreach (var customerId in customerIds)
             {
