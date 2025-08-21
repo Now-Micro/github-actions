@@ -21,8 +21,10 @@ runs:
     - name: Setup Node.js
       if: inputs.node-project-path != ''
       uses: Now-Micro/actions/setup-node@v1
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
+
     - name: Get Project and Solution Files
       id: get-project-and-solution-files
       uses: Now-Micro/actions/get-project-and-solution-files-from-directory@v1
@@ -55,6 +57,10 @@ runs:
         ls "${{ steps.get-solution-root-directory.outputs.unique_root_directories }}" -al
 
       # todo: finish this
+      # This step has to various inputs (e.g. the path to the  ["./demo/coding-standards"], ./ ) as the ROOT_DIR
+      # and the PROJECT_FILE_PATH ["/home/runner/work/actions/actions/demo/coding-standards/SomeProject.csproj"]
+      # and return a path to the modified project file with the injected ProjectReference
+      # e.g. /home/runner/work/actions/actions/demo/coding-standards/SomeProject.csproj
     - name: Get the INPUT_INCLUDE_PATH
       id: get-include-path
       shell: bash
