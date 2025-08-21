@@ -25,7 +25,9 @@ runs:
       uses: actions/setup-dotnet@v4
     - name: Get Project and Solution Files
       id: get-project-and-solution-files
-      uses: Now-Micro/actions/get-project-and-solution-files-from-directory@v1
+      # todo: use this when done
+      # uses: Now-Micro/actions/get-project-and-solution-files-from-directory@v1
+      uses: ./get-project-and-solution-files-from-directory
       with:
         directory: ${{ inputs.directory }}
         debug-mode: ${{ inputs.debug-mode }}
