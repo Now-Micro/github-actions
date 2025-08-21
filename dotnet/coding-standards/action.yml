@@ -13,35 +13,38 @@ runs:
     - name: Setup Node.js
       if: inputs.node-project-path != ''
       uses: Now-Micro/actions/setup-node@v1
-    
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
-
     - name: Get Project and Solution Files
       id: get-project-and-solution-files
       uses: Now-Micro/actions/get-project-and-solution-files-from-directory@v1
       with:
         directory: ${{ inputs.directory }}
-
     - name: Get Solution Root Directory
       id: get-solution-root-directory
       uses: Now-Micro/actions/get-unique-root-directories@v1
       with:
         pattern: '^(.*)\/.*\.sln$'
         paths: ${{ steps.get-project-and-solution-files.outputs.solution-found }}
-    
     - name: Copy Relevant Files
       shell: bash
       run: |
+        set -euo pipefail
+        RAW='${{ steps.get-solution-root-directory.outputs.unique_root_directories }}'
+        # Parse JSON array (e.g. ["/path/to/root"]) using bash without jq
+        ROOT=$(echo "$RAW" | sed -e 's/^\[\"//' -e 's/\"\]$//' )
+        if [ -z "$ROOT" ] || [ "$ROOT" = "$RAW" ]; then
+          echo "Falling back to inputs.directory"
+          ROOT='${{ inputs.directory }}'
+        fi
         echo "Directory: ${{ inputs.directory }}"
-        echo "Project File: ${{ steps.get-project-and-solution-files.outputs.project-found }}"
         echo "Solution File: ${{ steps.get-project-and-solution-files.outputs.solution-found }}"
-        echo "Solution Root Directory: ${{ steps.get-solution-root-directory.outputs.unique_root_directories }}"
-
-        cp "./demo/coding-standards/.editorconfig" ${{ steps.get-solution-root-directory.outputs.unique_root_directories }}
-        cp -R "./demo/coding-standards/analyzers/Demo.Analyzers" ${{ steps.get-solution-root-directory.outputs.unique_root_directories }}/Demo.Analyzers
-        ls ${{ inputs.directory }} -la
-
+        echo "Project File: ${{ steps.get-project-and-solution-files.outputs.project-found }}"
+        echo "Derived Root: $ROOT"
+        mkdir -p "$ROOT/Demo.Analyzers"
+        cp "./demo/coding-standards/.editorconfig" "$ROOT/.editorconfig"
+        cp -R ./demo/coding-standards/analyzers/Demo.Analyzers/. "$ROOT/Demo.Analyzers/"
+        ls -al "$ROOT"
     # Todo: move this into Nodejs?
     # - name: Add ItemGroup to Solution
     #   shell: bash
