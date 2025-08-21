@@ -43,42 +43,59 @@ public sealed class DisallowStringConcatAnalyzer : DiagnosticAnalyzer
 
     private static void AnalyzeAddExpression(SyntaxNodeAnalysisContext context)
     {
-        if (context.Node is not BinaryExpressionSyntax addExpr) return;
+        if (context.Node is not BinaryExpressionSyntax addExpr)
+            return;
 
         // Only consider outermost string + expression to avoid duplicate nested diagnostics
-        if (addExpr.Parent is BinaryExpressionSyntax parentBin && parentBin.IsKind(SyntaxKind.AddExpression)) return;
+        if (
+            addExpr.Parent is BinaryExpressionSyntax parentBin
+            && parentBin.IsKind(SyntaxKind.AddExpression)
+        )
+            return;
 
         var typeInfo = context.SemanticModel.GetTypeInfo(addExpr);
-        if (typeInfo.ConvertedType?.SpecialType != SpecialType.System_String) return;
+        if (typeInfo.ConvertedType?.SpecialType != SpecialType.System_String)
+            return;
 
         // Skip if both sides are simple string literals (constant folding is fine to allow) – guideline focuses on variable interpolation
         bool leftLit = addExpr.Left is LiteralExpressionSyntax { Token.ValueText: not null };
         bool rightLit = addExpr.Right is LiteralExpressionSyntax { Token.ValueText: not null };
-        if (leftLit && rightLit) return;
+        if (leftLit && rightLit)
+            return;
 
         // If inside an interpolated string, ignore (rare but protective)
-        if (addExpr.Ancestors().OfType<InterpolatedStringExpressionSyntax>().Any()) return;
+        if (addExpr.Ancestors().OfType<InterpolatedStringExpressionSyntax>().Any())
+            return;
 
         context.ReportDiagnostic(Diagnostic.Create(Rule, addExpr.GetLocation()));
     }
 
     private static void AnalyzeInvocation(SyntaxNodeAnalysisContext context)
     {
-        if (context.Node is not InvocationExpressionSyntax invocation) return;
-        if (invocation.Expression is not MemberAccessExpressionSyntax memberAccess) return;
-
-        // Detect string.Format(...)
-        if (
-            memberAccess.Expression is IdentifierNameSyntax ident
-            && ident.Identifier.Text == "string"
-            && memberAccess.Name.Identifier.Text == "Format"
-        )
+        if (context.Node is not InvocationExpressionSyntax invocation)
+            return;
+        if (invocation.Expression is not MemberAccessExpressionSyntax memberAccess)
         {
-            context.ReportDiagnostic(Diagnostic.Create(Rule, invocation.GetLocation()));
+            var sym = context.SemanticModel.GetSymbolInfo(invocation).Symbol as IMethodSymbol;
+            if (
+                sym?.ContainingType?.SpecialType == SpecialType.System_String
+                && sym.Name == "Format"
+            )
+            {
+                context.ReportDiagnostic(Diagnostic.Create(Rule, invocation.GetLocation()));
+            }
             return;
         }
 
-        // Detect Logger.LogDebug("foo" + bar) – addExpr will already be flagged, so no extra needed.
-        // (Leaving here for future extension if method-specific logic is desired.)
+        // Detect string.Format(...) via syntax OR symbol
+        if (memberAccess.Name.Identifier.Text == "Format")
+        {
+            var targetSym = context.SemanticModel.GetSymbolInfo(invocation).Symbol as IMethodSymbol;
+            if (targetSym?.ContainingType?.SpecialType == SpecialType.System_String)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(Rule, invocation.GetLocation()));
+                return;
+            }
+        }
     }
 }
