@@ -1,0 +1,16 @@
+root = true
+
+[*.cs]
+dotnet_diagnostic.VSTHRD103.severity = error
+# Enforce braces on all control blocks
+csharp_prefer_braces = true:error
+dotnet_diagnostic.IDE0011.severity = error
+# Prefer string interpolation
+dotnet_style_prefer_string_interpolation = true:error
+csharp_style_prefer_interpolated_string_expression = true:error
+# Custom logging rules
+dotnet_diagnostic.DA0002.severity = error
+
+[*.vue]
+indent_style = space
+indent_size = 2
