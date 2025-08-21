@@ -38,6 +38,12 @@ runs:
         INPUT_DIRECTORY: ${{ inputs.directory }}
         INPUT_CODE_ANALYZERS_NAME: ${{ inputs.code-analyzers-name }}
         INPUT_SOURCE_DIR: ./demo/coding-standards
+
+    - name: Print Solution Root Directory
+      shell: bash
+      run: |
+        echo "${{ steps.get-solution-root-directory.outputs.unique_root_directories }}"
+    
     - name: Inject Analyzer ProjectReference
       shell: bash
       run: node ./dotnet/coding-standards/inject-analyzer-reference.js
