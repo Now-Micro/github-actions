@@ -1,2 +1,4 @@
 - publish the newest from actions repo as v1 (regarding the get-unique-directories changes).  
     - test the new changes in code bits for #64 and #57
+- what is the best way to handle view/node linting?
+- document assumptions around linting (certain files have to be present) in a readme.md file in the action directory
