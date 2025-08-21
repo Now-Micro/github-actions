@@ -29,12 +29,19 @@ function searchBFS(startDir, maxDepth, findSolution, findProject) {
   const queue = [{ dir: startDir, depth: 0 }];
   while (queue.length && !(solutionFound && projectFound)) {
     const { dir, depth } = queue.shift();
+    dlog(`(BFS) Visiting dir='${dir}' depth=${depth} maxDepth=${maxDepth}`);
     if (depth > maxDepth) continue;
-    dlog(`(BFS) Visiting dir='${dir}' depth=${depth}`);
     let entries;
-    try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch (e) { console.error(`Cannot read directory: ${dir} (${e.message})`); continue; }
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    }
+    catch (e) {
+      console.error(`Cannot read directory: ${dir} (${e.message})`);
+      continue;
+    }
     // First pass: files at this depth
     for (const entry of entries) {
+      dlog(`(BFS) Examining entry: ${entry.name}`);
       if (!entry.isFile()) continue;
       const full = path.join(dir, entry.name);
       if (findSolution && !solutionFound && entry.name.endsWith('.sln')) { solutionFound = full; console.log(`Found solution: ${solutionFound}`); }
@@ -46,6 +53,7 @@ function searchBFS(startDir, maxDepth, findSolution, findProject) {
     for (const entry of entries) {
       if (entry.isDirectory()) {
         const next = path.join(dir, entry.name);
+        dlog(`(BFS) Enqueuing directory: ${next}`);
         queue.push({ dir: next, depth: depth + 1 });
       }
     }
