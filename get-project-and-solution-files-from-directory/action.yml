@@ -19,7 +19,7 @@ inputs:
   max-depth:
     description: "Maximum depth to search for .sln or .csproj files."
     required: false
-    default: "1"
+    default: "3"
 
 outputs:
   project-found:
