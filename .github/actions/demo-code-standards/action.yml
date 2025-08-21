@@ -6,6 +6,8 @@ runs:
   steps:
     - name: Build with Code Standards
       uses: Now-Micro/actions/dotnet/coding-standards@v1
+      with:
+        directory: './demo/coding-standards'
 
 
 
