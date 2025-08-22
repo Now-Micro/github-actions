@@ -41,6 +41,7 @@ runs:
         pattern: '^(.*)\/.*\.sln$'
         paths: ${{ steps.get-project-and-solution-files.outputs.solution-found }}
         debug-mode: ${{ inputs.debug-mode }}
+        output-is-json: 'false'
 
     - name: Copy Relevant Files
       shell: bash
