@@ -1,4 +1,4 @@
-name: Demo - Code Standards (Fail)
+name: Demo - Code Standards (Success)
 on:
   workflow_dispatch:
 jobs:
@@ -11,4 +11,4 @@ jobs:
       - name: Run demo for code standards
         uses: ./.github/actions/demo-code-standards
         with:
-          directory: './demo/coding-standards-fail'
+          directory: './demo/coding-standards-success'
