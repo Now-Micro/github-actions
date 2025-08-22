@@ -113,21 +113,22 @@ test('inserts ItemGroup using explicit INPUT_INCLUDE_PATH', () => {
   assert.ok(!updated.includes('CodeStandards.Analyzers$'), 'Fallback include used unexpectedly');
 });
 
-test('skips if already present by OutputItemType attribute', () => {
+test('inserts even if already present by OutputItemType attribute', () => {
   const { file } = makeProj(`<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <ProjectReference Include="${defaultInclude}" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 </Project>`);
-  const r = withEnv({ INPUT_PROJECT_FILE: file, INPUT_CODE_ANALYZERS_NAME: 'CodeStandards.Analyzers', INPUT_INCLUDE_PATH: defaultInclude }, () => run());
-  assert.match(r.out, /already present/);
+  const r = withEnv({ INPUT_PROJECT_FILE: file, INPUT_INCLUDE_PATH: defaultInclude }, () => run());
   const updated = fs.readFileSync(file, 'utf8');
+  // Existing analyzer reference is removed first, then one is inserted
   const occurrences = (updated.match(/OutputItemType="Analyzer"/g) || []).length;
   assert.strictEqual(occurrences, 1);
+  assert.match(r.out, /Inserted Analyzer ProjectReference/);
 });
 
-test('skips if explicit INPUT_INCLUDE_PATH already present', () => {
+test('inserts even if explicit INPUT_INCLUDE_PATH already present', () => {
   const { file } = makeProj(`<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
@@ -135,18 +136,27 @@ test('skips if explicit INPUT_INCLUDE_PATH already present', () => {
   </ItemGroup>
 </Project>`);
   const r = withEnv({ INPUT_PROJECT_FILE: file, INPUT_INCLUDE_PATH: customInclude }, () => run());
-  assert.match(r.out, /already present/);
+  const updated = fs.readFileSync(file, 'utf8');
+  const includeOccurrences = updated.split(`Include="${customInclude}"`).length - 1;
+  assert.strictEqual(includeOccurrences, 2);
+  assert.match(updated, /OutputItemType="Analyzer"/);
+  assert.match(r.out, /Inserted Analyzer ProjectReference/);
 });
 
-test('skips if include path already present without OutputItemType', () => {
+test('inserts even if include path already present without OutputItemType', () => {
   const { file } = makeProj(`<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <ProjectReference Include="${defaultInclude}" />
   </ItemGroup>
 </Project>`);
-  const r = withEnv({ INPUT_PROJECT_FILE: file, INPUT_CODE_ANALYZERS_NAME: 'CodeStandards.Analyzers', INPUT_INCLUDE_PATH: defaultInclude }, () => run());
-  assert.match(r.out, /already present/);
+  const r = withEnv({ INPUT_PROJECT_FILE: file, INPUT_INCLUDE_PATH: defaultInclude }, () => run());
+  const updated = fs.readFileSync(file, 'utf8');
+  const includeOccurrences = updated.split(`Include="${defaultInclude}"`).length - 1;
+  assert.strictEqual(includeOccurrences, 2);
+  const analyzerOccurrences = (updated.match(/OutputItemType="Analyzer"/g) || []).length;
+  assert.strictEqual(analyzerOccurrences, 1);
+  assert.match(r.out, /Inserted Analyzer ProjectReference/);
 });
 
 test('appends at end if </Project> missing', () => {
@@ -156,7 +166,7 @@ test('appends at end if </Project> missing', () => {
   assert.match(updated, /<ItemGroup>[\s\S]*OutputItemType="Analyzer"/);
 });
 
-test('commented EnforceCodeStyleInBuild is ignored and a new one is inserted', () => {
+test('commented EnforceCodeStyleInBuild is removed and a new one is inserted', () => {
   const commented = `<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
@@ -167,13 +177,11 @@ test('commented EnforceCodeStyleInBuild is ignored and a new one is inserted', (
   const { file } = makeProj(commented);
   withEnv({ INPUT_PROJECT_FILE: file, INPUT_INCLUDE_PATH: defaultInclude }, () => run());
   const updated = fs.readFileSync(file, 'utf8');
-  // Original commented occurrence remains
-  assert.ok(updated.includes('<!-- <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild> -->'));
-  // A new, uncommented true element is inserted
+  assert.ok(!updated.includes('<!-- <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild> -->'));
   assert.match(updated, /<EnforceCodeStyleInBuild>true<\/EnforceCodeStyleInBuild>/);
 });
 
-test('commented Analyzer ProjectReference is ignored and a new one is inserted', () => {
+test('commented Analyzer ProjectReference is removed and a new one is inserted', () => {
   const commented = `<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
@@ -183,15 +191,14 @@ test('commented Analyzer ProjectReference is ignored and a new one is inserted',
   const { file } = makeProj(commented);
   withEnv({ INPUT_PROJECT_FILE: file, INPUT_INCLUDE_PATH: defaultInclude }, () => run());
   const updated = fs.readFileSync(file, 'utf8');
-  // Comment remains
-  assert.ok(updated.includes(`<!-- <ProjectReference Include="${defaultInclude}"`));
-  // A new, uncommented multiline ProjectReference was inserted
-  const escapedPath = defaultInclude.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const re = new RegExp(String.raw`<ProjectReference[\s\S]*Include="${escapedPath}"[\s\S]*OutputItemType="Analyzer"[\s\S]*/>`);
-  assert.match(updated, re);
+  assert.ok(!updated.includes(`<!-- <ProjectReference Include="${defaultInclude}`));
+  assert.ok(updated.includes(`Include="${defaultInclude}"`));
+  assert.ok(updated.includes('OutputItemType="Analyzer"'));
+  const prCount = (updated.match(/<ProjectReference\b/g) || []).length;
+  assert.strictEqual(prCount, 1);
 });
 
-test('commented EnforceCodeStyleInBuild true is ignored and a new one is inserted', () => {
+test('commented EnforceCodeStyleInBuild true is removed and a new one is inserted', () => {
   const commented = `<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
@@ -202,9 +209,7 @@ test('commented EnforceCodeStyleInBuild true is ignored and a new one is inserte
   const { file } = makeProj(commented);
   withEnv({ INPUT_PROJECT_FILE: file, INPUT_INCLUDE_PATH: defaultInclude }, () => run());
   const updated = fs.readFileSync(file, 'utf8');
-  // Original commented occurrence remains
-  assert.ok(updated.includes('<!-- <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild> -->'));
-  // A new, uncommented true element is inserted on its own line (not within the comment)
+  assert.ok(!updated.includes('<!-- <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild> -->'));
   const lineStartTrue = /(?:^|\r?\n)[ \t]*<EnforceCodeStyleInBuild>true<\/EnforceCodeStyleInBuild>/;
   assert.match(updated, lineStartTrue);
 });
