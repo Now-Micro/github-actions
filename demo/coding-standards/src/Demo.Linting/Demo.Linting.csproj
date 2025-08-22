@@ -15,10 +15,10 @@
       DestinationFiles="..\..\.editorconfig"
       SkipUnchangedFiles="true"
     />
-  </Target>
+  </Target> 
   <ItemGroup>
     <ProjectReference
-      Include="..\..\..\..\dotnet\coding-standards\analyzers\Demo.Analyzers\Demo.Analyzers.csproj"
+      Include="..\..\..\..\dotnet\coding-standards\analyzers\CodingStandards.Analyzers\CodingStandards.Analyzers.csproj"
       OutputItemType="Analyzer"
       ReferenceOutputAssembly="false"
     />
