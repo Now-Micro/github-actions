@@ -1,5 +1,4 @@
 - demo/linting (finish):
-    - namesspace standard
     - figure out how to inject  <ItemGroup>
     <ProjectReference
       Include="..\..\${{ inputs.code-analyzers-name }}\Demo.Analyzers.csproj"
