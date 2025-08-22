@@ -133,7 +133,7 @@ runs:
       uses: ./get-project-and-solution-files-from-directory
       with:
         debug-mode: 'true'
-        directory: demo/coding-standards
+        directory: demo/coding-standards-fail
         find-solution: 'true'
         find-project: 'true'
         max-depth: 8
