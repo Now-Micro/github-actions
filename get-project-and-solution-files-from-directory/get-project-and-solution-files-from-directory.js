@@ -94,8 +94,16 @@ function run() {
     }
 
     if (githubOutput) {
-      if (solutionFound && solutionFound.endsWith('.sln')) { dlog(`Writing solution-found output: ${solutionFound}`); fs.appendFileSync(githubOutput, `solution-found=${solutionFound}\n`); }
-      if (projectFound && projectFound.endsWith('.csproj')) { dlog(`Writing project-found output: ${projectFound}`); fs.appendFileSync(githubOutput, `project-found=${projectFound}\n`); }
+      if (solutionFound && solutionFound.endsWith('.sln')) {
+        dlog(`Writing solution-found output: ${solutionFound}`);
+        fs.appendFileSync(githubOutput, `solution-found=${solutionFound}\n`);
+        fs.appendFileSync(githubOutput, `solution_name=${path.basename(solutionFound)}\n`);
+      }
+      if (projectFound && projectFound.endsWith('.csproj')) {
+        dlog(`Writing project-found output: ${projectFound}`);
+        fs.appendFileSync(githubOutput, `project-found=${projectFound}\n`);
+        fs.appendFileSync(githubOutput, `project_name=${path.basename(projectFound)}\n`);
+      }
     } else { console.error('GITHUB_OUTPUT not set; cannot write outputs'); process.exit(1); }
   } catch (err) {
     console.error('Error:', err.message);
