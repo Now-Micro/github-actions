@@ -24,4 +24,9 @@
       PrivateAssets="all"
     />
   </ItemGroup>
+  <!-- Add analyzer release tracking files -->
+  <ItemGroup>
+    <AdditionalFiles Include="AnalyzerReleases.Shipped.md" />
+    <AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />
+  </ItemGroup>
 </Project>
