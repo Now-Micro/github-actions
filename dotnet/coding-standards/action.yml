@@ -75,7 +75,12 @@ runs:
         INPUT_CODE_ANALYZERS_NAME: ${{ inputs.code-analyzers-name }}
         INPUT_RELATIVE_PATH: ${{ steps.get-relative-path.outputs.relative_path }}/something.here.csproj
         INPUT_PROJECT_FILE: ${{ steps.get-project-and-solution-files.outputs.project-found }}
-        INPUT_INCLUDE_PATH: ${{ steps.get-relative-path.outputs.include_path }}${{ inputs.code-analyzers-name }}/Demo.Analyzers.csproj
+        INPUT_INCLUDE_PATH: ${{ steps.get-relative-path.outputs.relative_path }}${{ inputs.code-analyzers-name }}/Demo.Analyzers.csproj
+
+    - name: Print File Root Directory
+      shell: bash
+      run: |
+        cat "${{ steps.get-project-and-solution-files.outputs.project-found}}" -al
 
     - name: Restore
       shell: bash
