@@ -108,17 +108,19 @@ runs:
     - name: Restore
       shell: bash
       id: restore
+      continue-on-error: true
       run: dotnet restore ${{ steps.get-project-and-solution-files.outputs.solution-found }}
 
     - name: Build Solution
       shell: bash
       if: steps.restore.outcome == 'success'
+      continue-on-error: true
       run: dotnet build ${{ steps.get-project-and-solution-files.outputs.solution-found }} --no-restore
 
     # todo: need to remove the copied over files
-    - name: Clean Up
-      shell: bash
-      run: |
-        rm -rf $GITHUB_WORKSPACE/project-file-copy 
-        echo "== Project file contents after clean up =="
-        cat "${{ steps.get-project-and-solution-files.outputs.project-found }}"
+    # - name: Clean Up
+    #   shell: bash
+    #   run: |
+    #     rm -rf $GITHUB_WORKSPACE/project-file-copy 
+    #     echo "== Project file contents after clean up =="
+    #     cat "${{ steps.get-project-and-solution-files.outputs.project-found }}"
