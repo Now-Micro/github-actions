@@ -37,7 +37,7 @@ function run() {
     const sourceDir = process.env.INPUT_SOURCE_DIR;
     
     const root = parseFirstRoot(rawRoots, directory);
-    
+
     console.log("Running copy-relevant-files.js");
     console.log(`Raw Roots: ${rawRoots}`);
     console.log(`Directory: ${directory}`);
@@ -56,7 +56,7 @@ function run() {
 
     ensureDir(root);
     // Fix: remove stray '$' at end of folder name
-    const analyzersTarget = path.join(root, `${codeAnalyzersName}`, codeAnalyzersName);
+    const analyzersTarget = path.join(root, codeAnalyzersName);
     ensureDir(analyzersTarget);
 
     // .editorconfig copy if different

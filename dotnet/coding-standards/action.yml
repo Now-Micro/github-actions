@@ -70,7 +70,7 @@ runs:
       env:
         INPUT_CODE_ANALYZERS_NAME: ${{ inputs.code-analyzers-name }}
         INPUT_PROJECT_FILE: ${{ steps.get-project-and-solution-files.outputs.project-found }}
-        INPUT_INCLUDE_PATH: ${{ steps.get-relative-path.outputs.relative_path }}/CodeStandards.Analyzers/CodeStandards.Analyzers.csproj
+        INPUT_INCLUDE_PATH: ${{ steps.get-relative-path.outputs.relative_path }}CodeStandards.Analyzers/CodeStandards.Analyzers.csproj
 
     - name: Print File Root Directory
       shell: bash
