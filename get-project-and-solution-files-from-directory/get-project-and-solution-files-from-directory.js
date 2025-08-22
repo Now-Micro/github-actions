@@ -82,8 +82,14 @@ function run() {
     if (!inputDir) { console.error('Input directory is required.'); process.exit(1); }
     if (!fs.existsSync(inputDir) || !fs.statSync(inputDir).isDirectory()) { console.error(`Input directory does not exist or is not a directory: ${inputDir}`); process.exit(1); }
 
-    console.log(`Searching for .sln or .csproj files in ${inputDir}...`);
-    // Use BFS to prioritize shallower files (ensures AppA.csproj preferred over deep project)
+    const types = findSolution && findProject
+      ? '.sln and .csproj'
+      : findSolution
+        ? '.sln'
+        : findProject
+          ? '.csproj'
+          : 'no file types';
+    console.log(`Searching for ${types} in ${inputDir} (max depth: ${maxDepth})...`);
     searchBFS(inputDir, maxDepth, findSolution, findProject);
 
     if (findProject) {

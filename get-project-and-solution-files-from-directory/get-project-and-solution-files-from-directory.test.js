@@ -175,7 +175,7 @@ test('Depth limit prevents deeper discovery', () => {
   });
   assert.strictEqual(exitCode, 0);
   assert.strictEqual(outputContent.trim(), '');
-  assert.match(logs.out, /Searching for .sln or .csproj/);
+  assert.match(logs.out, /Searching for .* in .* \(max depth: 0\)\.\.\./);
 });
 
 // 6. Missing directory error
