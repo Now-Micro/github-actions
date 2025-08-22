@@ -3,8 +3,8 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
-    <PackageId>Demo.Analyzers</PackageId>
-    <AssemblyName>Demo.Analyzers</AssemblyName>
+    <PackageId>CodingStandards.Analyzers</PackageId>
+    <AssemblyName>CodingStandards.Analyzers</AssemblyName>
     <IncludeBuildOutput>true</IncludeBuildOutput>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
