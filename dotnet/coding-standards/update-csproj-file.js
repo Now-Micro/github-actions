@@ -6,6 +6,52 @@ function log(msg) {
     process.stdout.write(String(msg) + '\n');
 }
 
+function ensureEnforceCodeStyleTrue(xml) {
+    let updated = xml;
+    let changed = false;
+    const re = /<EnforceCodeStyleInBuild>([\s\S]*?)<\/EnforceCodeStyleInBuild>/i;
+    const m = re.exec(updated);
+    if (m) {
+        const current = (m[1] || '').trim().toLowerCase();
+        if (current !== 'true') {
+            updated = updated.replace(re, '<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>');
+            changed = true;
+            log('Updated EnforceCodeStyleInBuild to true');
+        }
+        return { updated, changed };
+    }
+    // Not present: insert into first <PropertyGroup>
+    const pgOpen = /<PropertyGroup\b[^>]*>/i;
+    const mo = pgOpen.exec(updated);
+    if (mo) {
+        const startIdx = mo.index + mo[0].length;
+        const closeIdx = updated.indexOf('</PropertyGroup>', startIdx);
+        if (closeIdx !== -1) {
+            const indentMatch = /(\r?\n)([ \t]*)<\/PropertyGroup>/.exec(updated.slice(startIdx - 200, closeIdx + 16)) || [];
+            const nl = '\n';
+            const indent = (indentMatch[2] || '  ');
+            const insertion = `${nl}${indent}  <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>`;
+            updated = updated.slice(0, closeIdx) + insertion + updated.slice(closeIdx);
+            changed = true;
+            log('Inserted EnforceCodeStyleInBuild into first PropertyGroup');
+            return { updated, changed };
+        }
+    }
+    // No PropertyGroup found: create one before </Project> or append
+    const closing = '</Project>';
+    const idx = updated.lastIndexOf(closing);
+    const block = `  <PropertyGroup>\n    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>\n  </PropertyGroup>\n`;
+    if (idx >= 0) {
+        updated = updated.slice(0, idx) + block + updated.slice(idx);
+    } else {
+        if (!updated.endsWith('\n')) updated += '\n';
+        updated += block;
+    }
+    changed = true;
+    log('Added PropertyGroup with EnforceCodeStyleInBuild');
+    return { updated, changed };
+}
+
 function run() {
     console.log(`Injecting Analyzer ProjectReference...`);
     const projectFile = (process.env.INPUT_PROJECT_FILE || '').trim();
@@ -13,59 +59,58 @@ function run() {
 
     console.log(`projectFile: ${projectFile}`);
     console.log(`includePath: ${includePath}`);
+    if (!projectFile || !fs.existsSync(projectFile)) {
+        log(`No project file found at '${projectFile}'; skipping update of project file`);
+        process.exit(1);
+    }
     if (!includePath) {
-        log('No include path provided; skipping injection of reference');
-        return;
-    }
-    if (!projectFile) {
-        log('No project file path provided; skipping injection of reference');
-        return;
-    }
-    if (!fs.existsSync(projectFile)) {
-        log(`Project file not found: ${projectFile}; skipping injection of reference');`);
-        return;
+        log(`No include path provided; skipping update of ${projectFile}`);
+        process.exit(1);
     }
 
     const original = fs.readFileSync(projectFile, 'utf8');
+    let updated = original;
+    let anyChange = false;
 
-    // Prefer an explicit include path, otherwise fall back to the default location under the analyzers folder
+    // Ensure EnforceCodeStyleInBuild is true
+    const enforced = ensureEnforceCodeStyleTrue(updated);
+    updated = enforced.updated;
+    anyChange = anyChange || enforced.changed;
 
-    log(`includePath: ${includePath}`);
+    // Analyzer injection (optional when includePath provided)
     // If an Analyzer reference already exists, skip to avoid duplicates
-    if (original.includes('OutputItemType="Analyzer"') || original.includes(includePath)) {
+    if (updated.includes('OutputItemType="Analyzer"') || updated.includes(includePath)) {
         log('Analyzer ProjectReference already present; skipping insert');
-        return;
-    }
-
-    const injection = [
-        '  <ItemGroup>',
-        '    <ProjectReference',
-        `      Include="${includePath}"`,
-        '      OutputItemType="Analyzer"',
-        '      ReferenceOutputAssembly="false"',
-        '    />',
-        '  </ItemGroup>',
-        ''
-    ].join('\n');
-
-    const closing = '</Project>';
-    const idx = original.lastIndexOf(closing);
-    let updated;
-    if (idx >= 0) {
-        updated = original.slice(0, idx) + injection + original.slice(idx);
     } else {
-        // Fallback: append at end
-        updated = original;
-        if (!updated.endsWith('\n')) updated += '\n';
-        updated += injection;
-    }
+        const injection = [
+            '  <ItemGroup>',
+            '    <ProjectReference',
+            `      Include="${includePath}"`,
+            '      OutputItemType="Analyzer"',
+            '      ReferenceOutputAssembly="false"',
+            '    />',
+            '  </ItemGroup>',
+            ''
+        ].join('\n');
 
-    fs.writeFileSync(projectFile, updated, 'utf8');
-    log(`Inserted Analyzer ProjectReference into ${projectFile}`);
+        const closing = '</Project>';
+        const idx = updated.lastIndexOf(closing);
+        if (idx >= 0) {
+            updated = updated.slice(0, idx) + injection + updated.slice(idx);
+        } else {
+            if (!updated.endsWith('\n')) updated += '\n';
+            updated += injection;
+        }
+        anyChange = true;
+        log('Inserted Analyzer ProjectReference into project');
+    }
+    if (anyChange) {
+        fs.writeFileSync(projectFile, updated, 'utf8');
+    }
 }
 
 if (require.main === module) {
     try { run(); } catch (e) { console.error(e?.message || String(e)); process.exit(1); }
 }
 
-module.exports = { run };
+module.exports = { run, ensureEnforceCodeStyleTrue };
