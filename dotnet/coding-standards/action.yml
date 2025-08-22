@@ -3,10 +3,6 @@ description: 'Ensure coding standards are met using analyzers'
 author: 'Trafera'
 
 inputs:
-  code-analyzers-name:
-    description: 'Name of the code analyzers project to copy to the target directory.'
-    required: false
-    default: 'CodeStandards.Analyzers'
   debug-mode:
     description: 'Enable debug mode for additional logging.'
     required: false
@@ -51,14 +47,14 @@ runs:
       env:
         INPUT_UNIQUE_ROOT_DIRECTORIES: ${{ steps.get-solution-root-directory.outputs.unique_root_directories }}
         INPUT_DIRECTORY: ${{ inputs.directory }}
-        INPUT_CODE_ANALYZERS_NAME: ${{ inputs.code-analyzers-name }}
+        INPUT_CODE_ANALYZERS_NAME: CodeStandards.Analyzers
         INPUT_SOURCE_DIR: ./dotnet/coding-standards
 
     - name: Print Solution Root Directory
       shell: bash
       run: |
         ls "${{ steps.get-solution-root-directory.outputs.unique_root_directories }}" -al
-        ls "${{ steps.get-solution-root-directory.outputs.unique_root_directories }}/${{ inputs.code-analyzers-name }}" -al
+        ls "${{ steps.get-solution-root-directory.outputs.unique_root_directories }}/CodeStandards.Analyzers" -al
 
     - name: Get Relative Path
       id: get-relative-path
@@ -73,14 +69,14 @@ runs:
       run: node "$GITHUB_ACTION_PATH/update-csproj-file.js"
       env:
         INPUT_CODE_ANALYZERS_NAME: ${{ inputs.code-analyzers-name }}
-        INPUT_RELATIVE_PATH: ${{ steps.get-relative-path.outputs.relative_path }}/something.here.csproj
         INPUT_PROJECT_FILE: ${{ steps.get-project-and-solution-files.outputs.project-found }}
-        INPUT_INCLUDE_PATH: ${{ steps.get-relative-path.outputs.relative_path }}${{ inputs.code-analyzers-name }}/Demo.Analyzers.csproj
+        INPUT_INCLUDE_PATH: ${{ steps.get-relative-path.outputs.relative_path }}/CodeStandards.Analyzers/CodeStandards.Analyzers.csproj
 
     - name: Print File Root Directory
       shell: bash
       run: |
         cat "${{ steps.get-project-and-solution-files.outputs.project-found}}"
+        cat "${{ steps.get-solution-root-directory.outputs.unique_root_directories }}/CodeStandards.Analyzers"/CodeStandards.Analyzers.csproj"
 
     - name: Restore
       shell: bash
