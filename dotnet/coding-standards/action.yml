@@ -64,6 +64,10 @@ runs:
       id: get-relative-path
       shell: bash
       run: node "$GITHUB_ACTION_PATH/relative-path-finder.js"
+      env: 
+        INPUT_ROOT_FILE: ${{ steps.get-project-and-solution-files.outputs.solution-found }}
+        INPUT_SUBDIRECTORY_FILE: ${{ steps.get-project-and-solution-files.outputs.project-found }}
+        
 
     - name: Inject Analyzer ProjectReference
       shell: bash
