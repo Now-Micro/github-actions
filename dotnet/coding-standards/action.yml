@@ -3,6 +3,10 @@ description: 'Ensure coding standards are met using analyzers'
 author: 'Trafera'
 
 inputs:
+  code-analyzers-name:
+    description: 'Name of the code analyzers project.  DO NOT CHANGE THIS UNLESS YOU KNOW WHAT YOU ARE DOING.  IT MUST MATCH THE NAME OF THE FOLDER CONTAINING THE .CSPROJ FILE.'
+    required: false
+    default: 'CodingStandards.Analyzers'
   debug-mode:
     description: 'Enable debug mode for additional logging.'
     required: false
@@ -47,14 +51,8 @@ runs:
       env:
         INPUT_UNIQUE_ROOT_DIRECTORIES: ${{ steps.get-solution-root-directory.outputs.unique_root_directories }}
         INPUT_DIRECTORY: ${{ inputs.directory }}
-        INPUT_CODE_ANALYZERS_NAME: CodeStandards.Analyzers
+        INPUT_CODE_ANALYZERS_NAME: ${{ inputs.code-analyzers-name }}
         INPUT_SOURCE_DIR: ./dotnet/coding-standards
-
-    - name: Print Solution Root Directory
-      shell: bash
-      run: |
-        ls "${{ steps.get-solution-root-directory.outputs.unique_root_directories }}" -al
-        ls "${{ steps.get-solution-root-directory.outputs.unique_root_directories }}/CodeStandards.Analyzers" -al
 
     - name: Get Relative Path
       id: get-relative-path
@@ -70,7 +68,7 @@ runs:
       env:
         INPUT_CODE_ANALYZERS_NAME: ${{ inputs.code-analyzers-name }}
         INPUT_PROJECT_FILE: ${{ steps.get-project-and-solution-files.outputs.project-found }}
-        INPUT_INCLUDE_PATH: ${{ steps.get-relative-path.outputs.relative_path }}CodeStandards.Analyzers/CodeStandards.Analyzers.csproj
+        INPUT_INCLUDE_PATH: ${{ steps.get-relative-path.outputs.relative_path }}${{ inputs.code-analyzers-name }}/${{ inputs.code-analyzers-name }}.csproj
 
     - name: Print File Root Directory
       shell: bash
@@ -78,7 +76,7 @@ runs:
         set -e
         PROJ_FILE="${{ steps.get-project-and-solution-files.outputs.project-found }}"
         ROOT_DIR="${{ steps.get-solution-root-directory.outputs.unique_root_directories }}"
-        ANALYZERS_DIR="$ROOT_DIR/CodeStandards.Analyzers"
+        ANALYZERS_DIR="$ROOT_DIR/${{ inputs.code-analyzers-name }}"
 
         echo "== Project file directory =="
         echo "$PROJ_FILE"
@@ -96,7 +94,7 @@ runs:
         cat "$PROJ_FILE"
 
         echo "== Analyzer project file contents =="
-        cat "$ANALYZERS_DIR/CodeStandards.Analyzers.csproj"
+        cat "$ANALYZERS_DIR/${{ inputs.code-analyzers-name }}.csproj"
 
     - name: Restore
       shell: bash
