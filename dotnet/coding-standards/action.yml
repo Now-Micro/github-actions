@@ -36,7 +36,9 @@ runs:
 
     - name: Get Solution Root Directory
       id: get-solution-root-directory
-      uses: Now-Micro/actions/get-unique-root-directories@v1
+      # todo: replace this before publishing
+      # uses: Now-Micro/actions/get-unique-root-directories@v1
+      uses: ./get-unique-root-directories
       with:
         pattern: '^(.*)\/.*\.sln$'
         paths: ${{ steps.get-project-and-solution-files.outputs.solution-found }}
