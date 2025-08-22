@@ -80,7 +80,7 @@ runs:
     - name: Print File Root Directory
       shell: bash
       run: |
-        cat "${{ steps.get-project-and-solution-files.outputs.project-found}}" -al
+        cat "${{ steps.get-project-and-solution-files.outputs.project-found}}"
 
     - name: Restore
       shell: bash
