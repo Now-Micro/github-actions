@@ -52,7 +52,7 @@ runs:
         INPUT_UNIQUE_ROOT_DIRECTORIES: ${{ steps.get-solution-root-directory.outputs.unique_root_directories }}
         INPUT_DIRECTORY: ${{ inputs.directory }}
         INPUT_CODE_ANALYZERS_NAME: ${{ inputs.code-analyzers-name }}
-        INPUT_SOURCE_DIR: ./demo/coding-standards
+        INPUT_SOURCE_DIR: ./dotnet/coding-standards
 
     - name: Print Solution Root Directory
       shell: bash
