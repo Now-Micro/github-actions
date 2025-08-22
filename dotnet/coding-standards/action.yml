@@ -68,9 +68,9 @@ runs:
         INPUT_ROOT_FILE: ${{ steps.get-project-and-solution-files.outputs.solution-found }}
         INPUT_SUBDIRECTORY_FILE: ${{ steps.get-project-and-solution-files.outputs.project-found }}
 
-    - name: Inject Analyzer ProjectReference
+    - name: Update CSProj File
       shell: bash
-      run: node "$GITHUB_ACTION_PATH/inject-analyzer-reference.js"
+      run: node "$GITHUB_ACTION_PATH/update-csproj-file.js"
       env:
         INPUT_CODE_ANALYZERS_NAME: ${{ inputs.code-analyzers-name }}
         INPUT_RELATIVE_PATH: ${{ steps.get-relative-path.outputs.relative_path }}/something.here.csproj

@@ -5,6 +5,8 @@
       OutputItemType="Analyzer"
       ReferenceOutputAssembly="false"
     />
+    
+  - also need to make sure that <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild> is in the csproj file
   </ItemGroup>
     - address # Todo: change when done in demo-coding-standards.yml
 

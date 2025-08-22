@@ -3,7 +3,7 @@ const assert = require('node:assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { run } = require('./inject-analyzer-reference');
+const { run } = require('./update-csproj-file');
 
 function withEnv(env, fn) {
   const prev = { ...process.env };
