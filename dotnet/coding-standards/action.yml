@@ -54,6 +54,7 @@ runs:
     - name: Print Solution Root Directory
       shell: bash
       run: |
+        ls -al
         ls "${{ steps.get-solution-root-directory.outputs.unique_root_directories }}" -al
   
     - name: Get Relative Path
