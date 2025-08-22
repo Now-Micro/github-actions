@@ -7,9 +7,12 @@ function log(msg) {
 }
 
 function run() {
+    console.log(`Injecting Analyzer ProjectReference...`);
     const projectFile = (process.env.INPUT_PROJECT_FILE || '').trim();
     const includePath = (process.env.INPUT_INCLUDE_PATH || '').trim();
 
+    console.log(`projectFile: ${projectFile}`);
+    console.log(`includePath: ${includePath}`);
     if (!includePath) {
         log('No include path provided; skipping injection of reference');
         return;
