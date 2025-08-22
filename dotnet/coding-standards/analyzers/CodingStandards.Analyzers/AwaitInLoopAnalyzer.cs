@@ -1,9 +1,9 @@
 using System.Collections.Immutable;
+using System.Linq; // added for OfType
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
-using System.Linq; // added for OfType
 
 namespace Demo.Analyzers;
 
