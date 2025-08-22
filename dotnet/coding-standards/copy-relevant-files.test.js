@@ -72,7 +72,7 @@ test('run: copies editorconfig and analyzers', () => {
   const root = path.join(tmp, 'root');
   const r = withEnv({ INPUT_UNIQUE_ROOT_DIRECTORIES: '["' + root.replace(/\\/g, '/') + '"]', INPUT_DIRECTORY: root, INPUT_CODE_ANALYZERS_NAME: 'CodeStandards.Analyzers', INPUT_SOURCE_DIR: source }, () => run());
   assert.ok(fs.existsSync(path.join(root, '.editorconfig')));
-  assert.ok(fs.existsSync(path.join(root, 'CodeStandards.Analyzers$', 'Demo.Analyzers', 'Demo.Analyzers.csproj')));
+  assert.ok(fs.existsSync(path.join(root, 'CodeStandards.Analyzers', 'Demo.Analyzers', 'Demo.Analyzers.csproj')));
 });
 
 test('run: skips copying .editorconfig when identical', () => {

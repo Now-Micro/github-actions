@@ -12,7 +12,7 @@ function parseFirstRoot(raw, fallback) {
     if (Array.isArray(arr) && arr.length > 0 && typeof arr[0] === 'string') return arr[0];
   } catch {}
   // Try to strip ["..."]
-  const m = /^\["](.+)["]$/.exec(raw);
+  const m = /^\["](.+)["]/.exec(raw);
   if (m) return m[1];
   return fallback;
 }
@@ -44,7 +44,8 @@ function run() {
   log(`Source Dir: ${sourceDir}`);
 
   ensureDir(root);
-  const analyzersTarget = path.join(root, `${codeAnalyzersName}$`, 'Demo.Analyzers');
+  // Fix: remove stray '$' at end of folder name
+  const analyzersTarget = path.join(root, `${codeAnalyzersName}`, 'Demo.Analyzers');
   ensureDir(analyzersTarget);
 
   // .editorconfig copy if different
