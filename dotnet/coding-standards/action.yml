@@ -118,4 +118,7 @@ runs:
     # todo: need to remove the copied over files
     - name: Clean Up
       shell: bash
-      run: rm -rf $GITHUB_WORKSPACE/project-file-copy 
+      run: |
+        rm -rf $GITHUB_WORKSPACE/project-file-copy 
+        echo "== Project file contents after clean up =="
+        cat "${{ steps.get-project-and-solution-files.outputs.project-found }}"
