@@ -141,6 +141,5 @@ runs:
         fi
 
         # Remove temp project copy folder
+        echo "Removing temporary project copy folder"
         rm -rf $GITHUB_WORKSPACE/project-file-copy 
-        echo "== Project file contents after clean up =="
-        cat "${{ steps.get-project-and-solution-files.outputs.project-found }}"
