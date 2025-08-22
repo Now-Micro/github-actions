@@ -36,7 +36,7 @@ runs:
       # uses: Now-Micro/actions/get-unique-root-directories@v1
       uses: ./get-unique-root-directories
       with:
-        pattern: '^(.*)\/.*\.sln$'
+        pattern: '^(.*)\/.+\.sln$'
         paths: ${{ steps.get-project-and-solution-files.outputs.solution-found }}
         debug-mode: ${{ inputs.debug-mode }}
         output-is-json: 'false'
@@ -75,8 +75,28 @@ runs:
     - name: Print File Root Directory
       shell: bash
       run: |
-        cat "${{ steps.get-project-and-solution-files.outputs.project-found}}"
-        cat "${{ steps.get-solution-root-directory.outputs.unique_root_directories }}/CodeStandards.Analyzers"/CodeStandards.Analyzers.csproj"
+        set -e
+        PROJ_FILE="${{ steps.get-project-and-solution-files.outputs.project-found }}"
+        ROOT_DIR="${{ steps.get-solution-root-directory.outputs.unique_root_directories }}"
+        ANALYZERS_DIR="$ROOT_DIR/CodeStandards.Analyzers"
+
+        echo "== Project file directory =="
+        echo "$PROJ_FILE"
+        ls -al "$(dirname "$PROJ_FILE")"
+
+        echo "== Solution root directory =="
+        echo "$ROOT_DIR"
+        ls -al "$ROOT_DIR"
+
+        echo "== Analyzers directory =="
+        echo "$ANALYZERS_DIR"
+        ls -al "$ANALYZERS_DIR"
+
+        echo "== Project file contents =="
+        cat "$PROJ_FILE"
+
+        echo "== Analyzer project file contents =="
+        cat "$ANALYZERS_DIR/CodeStandards.Analyzers.csproj"
 
     - name: Restore
       shell: bash
