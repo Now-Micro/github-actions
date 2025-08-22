@@ -34,6 +34,15 @@ runs:
         find-project: 'true'
         max-depth: '3'
 
+    - name: Copy Project File 
+      id: copy-project-file
+      shell: bash
+      run: |
+        mkdir -p $GITHUB_WORKSPACE/project-file-copy
+        cp ${{ steps.get-project-and-solution-files.outputs.project-found }} $GITHUB_WORKSPACE/project-file-copy/${{ inputs.code-analyzers-name }}.csproj
+        ls -al $GITHUB_WORKSPACE/project-file-copy
+        cat $GITHUB_WORKSPACE/project-file-copy/${{ inputs.code-analyzers-name }}.csproj
+
     - name: Get Solution Root Directory
       id: get-solution-root-directory
       # todo: replace this before publishing
@@ -107,3 +116,6 @@ runs:
       run: dotnet build ${{ steps.get-project-and-solution-files.outputs.solution-found }} --no-restore
 
     # todo: need to remove the copied over files
+    - name: Clean Up
+      shell: bash
+      run: rm -rf $GITHUB_WORKSPACE/project-file-copy 
