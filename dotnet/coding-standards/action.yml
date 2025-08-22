@@ -122,7 +122,25 @@ runs:
     - name: Clean Up
       shell: bash
       run: |
+        set -e
+        # Restore original project file from temp copy
         cp $GITHUB_WORKSPACE/project-file-copy/${{ steps.get-project-and-solution-files.outputs.project-name }} ${{ steps.get-project-and-solution-files.outputs.project-found }}
+        
+        # Remove analyzers directory that was copied in
+        ROOT_DIR="${{ steps.get-solution-root-directory.outputs.unique_root_directories }}"
+        ANALYZERS_DIR="$ROOT_DIR/${{ inputs.code-analyzers-name }}"
+        if [ -d "$ANALYZERS_DIR" ]; then
+          echo "Removing analyzers directory: $ANALYZERS_DIR"
+          rm -rf "$ANALYZERS_DIR"
+        fi
+
+        # Remove .editorconfig only if it matches the action's source version
+        if [ -f "$ROOT_DIR/.editorconfig" ] && cmp -s "$ROOT_DIR/.editorconfig" "$GITHUB_ACTION_PATH/.editorconfig"; then
+          echo "Removing .editorconfig created by this action"
+          rm -f "$ROOT_DIR/.editorconfig"
+        fi
+
+        # Remove temp project copy folder
         rm -rf $GITHUB_WORKSPACE/project-file-copy 
         echo "== Project file contents after clean up =="
         cat "${{ steps.get-project-and-solution-files.outputs.project-found }}"
