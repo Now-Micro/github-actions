@@ -39,9 +39,9 @@ runs:
       shell: bash
       run: |
         mkdir -p $GITHUB_WORKSPACE/project-file-copy
-        cp ${{ steps.get-project-and-solution-files.outputs.project-found }} $GITHUB_WORKSPACE/project-file-copy/${{ inputs.code-analyzers-name }}.csproj
+        cp ${{ steps.get-project-and-solution-files.outputs.project-found }} $GITHUB_WORKSPACE/project-file-copy/${{ steps.get-project-and-solution-files.outputs.project-name }}
         ls -al $GITHUB_WORKSPACE/project-file-copy
-        cat $GITHUB_WORKSPACE/project-file-copy/${{ inputs.code-analyzers-name }}.csproj
+        cat $GITHUB_WORKSPACE/project-file-copy/${{ steps.get-project-and-solution-files.outputs.project-name }}
 
     - name: Get Solution Root Directory
       id: get-solution-root-directory
@@ -118,9 +118,10 @@ runs:
       run: dotnet build ${{ steps.get-project-and-solution-files.outputs.solution-found }} --no-restore
 
     # todo: need to remove the copied over files
-    # - name: Clean Up
-    #   shell: bash
-    #   run: |
-    #     rm -rf $GITHUB_WORKSPACE/project-file-copy 
-    #     echo "== Project file contents after clean up =="
-    #     cat "${{ steps.get-project-and-solution-files.outputs.project-found }}"
+    - name: Clean Up
+      shell: bash
+      run: |
+        cp $GITHUB_WORKSPACE/project-file-copy/${{ steps.get-project-and-solution-files.outputs.project-name }}.csproj ${{ steps.get-project-and-solution-files.outputs.project-found }}
+        rm -rf $GITHUB_WORKSPACE/project-file-copy 
+        echo "== Project file contents after clean up =="
+        cat "${{ steps.get-project-and-solution-files.outputs.project-found }}"

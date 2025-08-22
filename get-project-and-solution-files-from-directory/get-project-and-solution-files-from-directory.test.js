@@ -105,8 +105,8 @@ test('BFS finds shallow solution and project first', () => {
   assert.match(outputContent, /solution-found=.*Sample.sln/);
   assert.match(outputContent, /project-found=.*AppA.csproj/);
   // New outputs
-  assert.match(outputContent, /solution_name=Sample\.sln/);
-  assert.match(outputContent, /project_name=AppA\.csproj/);
+  assert.match(outputContent, /solution-name=Sample\.sln/);
+  assert.match(outputContent, /project-name=AppA\.csproj/);
   assert.doesNotMatch(logs.out, /Deep.csproj/); // deep project not chosen first
 });
 
@@ -123,9 +123,9 @@ test('Only solution search writes only solution output', () => {
   });
   assert.strictEqual(exitCode, 0);
   assert.match(outputContent, /solution-found=.*Only\.sln/);
-  assert.match(outputContent, /solution_name=Only\.sln/);
+  assert.match(outputContent, /solution-name=Only\.sln/);
   assert.ok(!/project-found=/.test(outputContent));
-  assert.ok(!/project_name=/.test(outputContent));
+  assert.ok(!/project-name=/.test(outputContent));
 });
 
 // 3. Only project search
@@ -141,9 +141,9 @@ test('Only project search writes only project output', () => {
   });
   assert.strictEqual(exitCode, 0);
   assert.match(outputContent, /project-found=.*Only\.csproj/);
-  assert.match(outputContent, /project_name=Only\.csproj/);
+  assert.match(outputContent, /project-name=Only\.csproj/);
   assert.ok(!/solution-found=/.test(outputContent));
-  assert.ok(!/solution_name=/.test(outputContent));
+  assert.ok(!/solution-name=/.test(outputContent));
 });
 
 // 4. None found scenario (empty directory)

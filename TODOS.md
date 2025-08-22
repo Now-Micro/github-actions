@@ -1,4 +1,4 @@
-- add outputs to get-project-and-solution-files-from-directory called project_name and solution_name
+- use outputs from get-project-and-solution-files-from-directory in composite action clean
 - add an input to allow for customization of the version used for [analyzers project](dotnet/coding-standards/analyzers/CodingStandards.Analyzers/CodingStandards.Analyzers.csproj) (currently "4.8.0").
 - add a workflow for success case of demo-code-standards-success (create another solution to test; can copy failing one)
 - need to copy stuff from AnalyzerReleases.UnShipped.md to AnalyzerReleases.Shipped.md (ask more about this)
