@@ -100,8 +100,8 @@ test('BFS finds shallow solution and project first', () => {
     INPUT_DEBUG_MODE: 'false'
   });
   assert.strictEqual(exitCode, 0);
-  assert.match(logs.out, /Found project: .*AppA.csproj/); // shallow
-  assert.match(logs.out, /Found solution: .*Sample.sln/);
+  assert.match(logs.out, /Project found: .*AppA.csproj/); // shallow
+  assert.match(logs.out, /Solution found: .*Sample.sln/);
   assert.match(outputContent, /solution-found=.*Sample.sln/);
   assert.match(outputContent, /project-found=.*AppA.csproj/);
   // New outputs

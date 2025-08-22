@@ -44,8 +44,12 @@ function searchBFS(startDir, maxDepth, findSolution, findProject) {
       dlog(`(BFS) Examining entry: ${entry.name}`);
       if (!entry.isFile()) continue;
       const full = path.join(dir, entry.name);
-      if (findSolution && !solutionFound && entry.name.endsWith('.sln')) { solutionFound = full; console.log(`Found solution: ${solutionFound}`); }
-      if (findProject && !projectFound && entry.name.endsWith('.csproj')) { projectFound = full; console.log(`Found project: ${projectFound}`); }
+      if (findSolution && !solutionFound && entry.name.endsWith('.sln')) {
+        solutionFound = full;
+      }
+      if (findProject && !projectFound && entry.name.endsWith('.csproj')) {
+        projectFound = full;
+      }
       if (solutionFound && projectFound) break;
     }
     if (solutionFound && projectFound) break;
