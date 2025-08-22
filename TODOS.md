@@ -1,14 +1,7 @@
-- demo/linting (finish):
-    - figure out how to inject  <ItemGroup>
-    <ProjectReference
-      Include="..\..\${{ inputs.code-analyzers-name }}\Demo.Analyzers.csproj"
-      OutputItemType="Analyzer"
-      ReferenceOutputAssembly="false"
-    />
-    
-  - also need to make sure that <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild> is in the csproj file
-  </ItemGroup>
-    - address # Todo: change when done in demo-coding-standards.yml
+- add an input to allow for customization of the version used for [analyzers project](dotnet/coding-standards/analyzers/CodingStandards.Analyzers/CodingStandards.Analyzers.csproj) (currently "4.8.0").
+- add a workflow for success case of demo-code-standards-success (create another solution to test; can copy failing one)
+- need to copy stuff from AnalyzerReleases.UnShipped.md to AnalyzerReleases.Shipped.md (ask more about this)
+- handle todo comments (search for 'todo:')
 
 - make sure that CSharpier adheres to standards [here](https://github.com/Now-Micro/CodeBits/blob/main/.github/copilot-instructions.md)
 - publish the newest from actions repo as v1 (regarding the get-unique-directories changes).  

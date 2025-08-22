@@ -9,7 +9,7 @@ runs:
       # uses: Now-Micro/actions/dotnet/coding-standards@v1
       uses: ./dotnet/coding-standards
       with:
-        directory: './demo/coding-standards'
+        directory: './demo/coding-standards-fail'
         debug-mode: 'true'
 
 
