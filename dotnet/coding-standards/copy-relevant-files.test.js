@@ -65,24 +65,24 @@ test('filesEqual: different contents', () => {
 test('run: copies editorconfig and analyzers', () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'copy-'));
   const source = path.join(tmp, 'src');
-  const analyzers = path.join(source, 'analyzers', 'Demo.Analyzers');
+  const analyzers = path.join(source, 'analyzers', 'CodeStandards.Analyzers');
   fs.mkdirSync(analyzers, { recursive: true });
   fs.writeFileSync(path.join(source, '.editorconfig'), 'root=true\n');
-  fs.writeFileSync(path.join(analyzers, 'Demo.Analyzers.csproj'), '<Project/>' );
+  fs.writeFileSync(path.join(analyzers, 'CodeStandards.Analyzers.csproj'), '<Project/>' );
   const root = path.join(tmp, 'root');
   const r = withEnv({ INPUT_UNIQUE_ROOT_DIRECTORIES: '["' + root.replace(/\\/g, '/') + '"]', INPUT_DIRECTORY: root, INPUT_CODE_ANALYZERS_NAME: 'CodeStandards.Analyzers', INPUT_SOURCE_DIR: source }, () => run());
   assert.ok(fs.existsSync(path.join(root, '.editorconfig')));
-  assert.ok(fs.existsSync(path.join(root, 'CodeStandards.Analyzers', 'Demo.Analyzers', 'Demo.Analyzers.csproj')));
+  assert.ok(fs.existsSync(path.join(root, 'CodeStandards.Analyzers', 'CodeStandards.Analyzers', 'CodeStandards.Analyzers.csproj')));
 });
 
 test('run: skips copying .editorconfig when identical', () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'copy-'));
   const source = path.join(tmp, 'src');
-  const analyzers = path.join(source, 'analyzers', 'Demo.Analyzers');
+  const analyzers = path.join(source, 'analyzers', 'CodeStandards.Analyzers');
   fs.mkdirSync(analyzers, { recursive: true });
   const editor = 'root=true\n';
   fs.writeFileSync(path.join(source, '.editorconfig'), editor);
-  fs.writeFileSync(path.join(analyzers, 'Demo.Analyzers.csproj'), '<Project/>' );
+  fs.writeFileSync(path.join(analyzers, 'CodeStandards.Analyzers.csproj'), '<Project/>' );
   const root = path.join(tmp, 'root');
   const targetEditor = path.join(root, '.editorconfig');
   fs.mkdirSync(root, { recursive: true });

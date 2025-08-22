@@ -35,8 +35,15 @@ function run() {
     const directory = process.env.INPUT_DIRECTORY || '';
     const codeAnalyzersName = process.env.INPUT_CODE_ANALYZERS_NAME || 'CodeStandards.Analyzers';
     const sourceDir = process.env.INPUT_SOURCE_DIR;
-
+    
     const root = parseFirstRoot(rawRoots, directory);
+    
+    console.log("Running copy-relevant-files.js");
+    console.log(`Raw Roots: ${rawRoots}`);
+    console.log(`Directory: ${directory}`);
+    console.log(`Code Analyzers Name: ${codeAnalyzersName}`);
+    console.log(`Source Dir: ${sourceDir}`);
+    console.log(`Derived Root: ${root}`);
     if (!root) { err('No root directory resolved'); process.exit(1); }
     if (!sourceDir) {
         err('No source directory provided'); 
@@ -49,7 +56,7 @@ function run() {
 
     ensureDir(root);
     // Fix: remove stray '$' at end of folder name
-    const analyzersTarget = path.join(root, `${codeAnalyzersName}`, 'Demo.Analyzers');
+    const analyzersTarget = path.join(root, `${codeAnalyzersName}`, codeAnalyzersName);
     ensureDir(analyzersTarget);
 
     // .editorconfig copy if different
@@ -67,7 +74,7 @@ function run() {
     }
 
     // Copy analyzers directory (shallow copy)
-    const srcAnalyzersDir = path.join(sourceDir, 'analyzers', 'Demo.Analyzers');
+    const srcAnalyzersDir = path.join(sourceDir, 'analyzers', codeAnalyzersName);
     if (!fs.existsSync(srcAnalyzersDir)) {
         err(`Missing ${srcAnalyzersDir}`);
         process.exit(1);
