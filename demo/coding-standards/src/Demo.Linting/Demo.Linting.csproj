@@ -8,8 +8,15 @@
     <!-- <EnableNETAnalyzers>true</EnableNETAnalyzers> -->
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
   </PropertyGroup>
-  <!-- Uncomment this when testing locally -->
-  <!-- <ItemGroup>
+  <!-- Uncomment below when trying to build locally (dotnet build .\demo\coding-standards\).  You have to run 2 times to get the full list of errors due to where the .editorconfig is located -->
+  <!-- <Target Name="UseSharedEditorConfig" BeforeTargets="CoreCompile">
+    <Copy
+      SourceFiles="..\..\..\..\dotnet\coding-standards\.editorconfig"
+      DestinationFiles="..\..\.editorconfig"
+      SkipUnchangedFiles="true"
+    />
+  </Target>
+  <ItemGroup>
     <ProjectReference
       Include="..\..\..\..\dotnet\coding-standards\analyzers\Demo.Analyzers\Demo.Analyzers.csproj"
       OutputItemType="Analyzer"
