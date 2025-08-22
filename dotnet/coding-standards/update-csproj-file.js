@@ -6,21 +6,53 @@ function log(msg) {
     process.stdout.write(String(msg) + '\n');
 }
 
+function getCommentRanges(xml) {
+    const ranges = [];
+    const re = /<!--[\s\S]*?-->/g;
+    let m;
+    while ((m = re.exec(xml))) {
+        ranges.push([m.index, m.index + m[0].length]);
+    }
+    return ranges;
+}
+
+function isInRanges(index, ranges) {
+    for (const [s, e] of ranges) {
+        if (index >= s && index < e) return true;
+    }
+    return false;
+}
+
 function ensureEnforceCodeStyleTrue(xml) {
     let updated = xml;
     let changed = false;
-    const re = /<EnforceCodeStyleInBuild>([\s\S]*?)<\/EnforceCodeStyleInBuild>/i;
-    const m = re.exec(updated);
-    if (m) {
-        const current = (m[1] || '').trim().toLowerCase();
-        if (current !== 'true') {
-            updated = updated.replace(re, '<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>');
+    const commentRanges = getCommentRanges(updated);
+
+    // Find first uncommented EnforceCodeStyleInBuild element
+    const tagRe = /<EnforceCodeStyleInBuild>([\s\S]*?)<\/EnforceCodeStyleInBuild>/gi;
+    let m;
+    let foundIdx = -1;
+    let foundText = '';
+    let foundValue = '';
+    while ((m = tagRe.exec(updated))) {
+        if (!isInRanges(m.index, commentRanges)) {
+            foundIdx = m.index;
+            foundText = m[0];
+            foundValue = (m[1] || '').trim().toLowerCase();
+            break;
+        }
+    }
+    if (foundIdx !== -1) {
+        if (foundValue !== 'true') {
+            const replacement = '<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>';
+            updated = updated.slice(0, foundIdx) + replacement + updated.slice(foundIdx + foundText.length);
             changed = true;
             log('Updated EnforceCodeStyleInBuild to true');
         }
         return { updated, changed };
     }
-    // Not present: insert into first <PropertyGroup>
+
+    // Not present (or only commented): insert into first <PropertyGroup>
     const pgOpen = /<PropertyGroup\b[^>]*>/i;
     const mo = pgOpen.exec(updated);
     if (mo) {
@@ -52,6 +84,20 @@ function ensureEnforceCodeStyleTrue(xml) {
     return { updated, changed };
 }
 
+function hasUncommentedAnalyzerReference(xml, includePath) {
+    const ranges = getCommentRanges(xml);
+    const prRe = /<ProjectReference\b[^>]*>/gi;
+    let m;
+    while ((m = prRe.exec(xml))) {
+        if (isInRanges(m.index, ranges)) continue;
+        const text = m[0];
+        if (text.includes('OutputItemType="Analyzer"') || (includePath && text.includes(includePath))) {
+            return true;
+        }
+    }
+    return false;
+}
+
 function run() {
     console.log(`Injecting Analyzer ProjectReference...`);
     const projectFile = (process.env.INPUT_PROJECT_FILE || '').trim();
@@ -72,14 +118,13 @@ function run() {
     let updated = original;
     let anyChange = false;
 
-    // Ensure EnforceCodeStyleInBuild is true
+    // Ensure EnforceCodeStyleInBuild is true (ignore commented occurrences)
     const enforced = ensureEnforceCodeStyleTrue(updated);
     updated = enforced.updated;
     anyChange = anyChange || enforced.changed;
 
-    // Analyzer injection (optional when includePath provided)
-    // If an Analyzer reference already exists, skip to avoid duplicates
-    if (updated.includes('OutputItemType="Analyzer"') || updated.includes(includePath)) {
+    // Analyzer injection: ignore commented references
+    if (hasUncommentedAnalyzerReference(updated, includePath)) {
         log('Analyzer ProjectReference already present; skipping insert');
     } else {
         const injection = [

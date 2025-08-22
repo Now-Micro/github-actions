@@ -155,3 +155,56 @@ test('appends at end if </Project> missing', () => {
   const updated = fs.readFileSync(file, 'utf8');
   assert.match(updated, /<ItemGroup>[\s\S]*OutputItemType="Analyzer"/);
 });
+
+test('commented EnforceCodeStyleInBuild is ignored and a new one is inserted', () => {
+  const commented = `<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <!-- <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild> -->
+  </PropertyGroup>
+</Project>`;
+  const { file } = makeProj(commented);
+  withEnv({ INPUT_PROJECT_FILE: file, INPUT_INCLUDE_PATH: defaultInclude }, () => run());
+  const updated = fs.readFileSync(file, 'utf8');
+  // Original commented occurrence remains
+  assert.ok(updated.includes('<!-- <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild> -->'));
+  // A new, uncommented true element is inserted
+  assert.match(updated, /<EnforceCodeStyleInBuild>true<\/EnforceCodeStyleInBuild>/);
+});
+
+test('commented Analyzer ProjectReference is ignored and a new one is inserted', () => {
+  const commented = `<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <!-- <ProjectReference Include="${defaultInclude}" OutputItemType="Analyzer" ReferenceOutputAssembly="false" /> -->
+  </ItemGroup>
+</Project>`;
+  const { file } = makeProj(commented);
+  withEnv({ INPUT_PROJECT_FILE: file, INPUT_INCLUDE_PATH: defaultInclude }, () => run());
+  const updated = fs.readFileSync(file, 'utf8');
+  // Comment remains
+  assert.ok(updated.includes(`<!-- <ProjectReference Include="${defaultInclude}"`));
+  // A new, uncommented multiline ProjectReference was inserted
+  const escapedPath = defaultInclude.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re = new RegExp(String.raw`<ProjectReference[\s\S]*Include="${escapedPath}"[\s\S]*OutputItemType="Analyzer"[\s\S]*/>`);
+  assert.match(updated, re);
+});
+
+test('commented EnforceCodeStyleInBuild true is ignored and a new one is inserted', () => {
+  const commented = `<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <!-- <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild> -->
+  </PropertyGroup>
+</Project>`;
+  const { file } = makeProj(commented);
+  withEnv({ INPUT_PROJECT_FILE: file, INPUT_INCLUDE_PATH: defaultInclude }, () => run());
+  const updated = fs.readFileSync(file, 'utf8');
+  // Original commented occurrence remains
+  assert.ok(updated.includes('<!-- <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild> -->'));
+  // A new, uncommented true element is inserted on its own line (not within the comment)
+  const lineStartTrue = /(?:^|\r?\n)[ \t]*<EnforceCodeStyleInBuild>true<\/EnforceCodeStyleInBuild>/;
+  assert.match(updated, lineStartTrue);
+});
