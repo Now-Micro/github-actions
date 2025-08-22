@@ -12,7 +12,7 @@ function parseFirstRoot(raw, fallback) {
         if (Array.isArray(arr) && arr.length > 0 && typeof arr[0] === 'string') return arr[0];
     } catch { }
     // Try to strip ["..."]
-    const m = /^\["](.+)["]/.exec(raw);
+    const m = /^\[\"(.+)\"\]$/.exec(raw);
     if (m) return m[1];
     return fallback;
 }
@@ -33,7 +33,7 @@ function ensureDir(p) { fs.mkdirSync(p, { recursive: true }); }
 function run() {
     const rawRoots = process.env.INPUT_UNIQUE_ROOT_DIRECTORIES || '';
     const directory = process.env.INPUT_DIRECTORY || '';
-    const codeAnalyzersName = process.env.INPUT_CODE_ANALYZERS_NAME || 'CodeStandards.Analyzers';
+    const codeAnalyzersName = process.env.INPUT_CODE_ANALYZERS_NAME;
     const sourceDir = process.env.INPUT_SOURCE_DIR;
     
     const root = parseFirstRoot(rawRoots, directory);
@@ -47,6 +47,10 @@ function run() {
     if (!root) { err('No root directory resolved'); process.exit(1); }
     if (!sourceDir) {
         err('No source directory provided'); 
+        process.exit(1);
+    }
+    if (!codeAnalyzersName) {
+        err('No code analyzers name provided');
         process.exit(1);
     }
 
