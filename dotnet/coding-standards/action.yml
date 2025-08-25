@@ -112,11 +112,17 @@ runs:
         echo "== Analyzer project file contents =="
         cat "$ANALYZERS_DIR/${{ inputs.code-analyzers-name }}.csproj"
 
+    - name: Restore
+      shell: bash
+      id: restore
+      continue-on-error: true
+      run: dotnet restore ${{ steps.get-project-and-solution-files.outputs.solution-found }}
+
     - name: Build Solution
       shell: bash
       if: steps.restore.outcome == 'success'
       continue-on-error: true
-      run: dotnet build ${{ steps.get-project-and-solution-files.outputs.solution-found }}
+      run: dotnet build ${{ steps.get-project-and-solution-files.outputs.solution-found }} --no-restore
 
     - name: Clean Up
       shell: bash
