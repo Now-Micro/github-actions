@@ -1,21 +1,32 @@
-name: 'Configure Nuget Source'
-description: 'Configures NuGet to use a source'
+name: "Configure Nuget Source"
+description: "Configures NuGet to use a source"
 inputs:
-  name: 
-    description: 'Name of the NuGet source'
+  name:
+    description: "Name of the NuGet source"
     required: true
   password:
-    description: 'Personal Access Token for authentication'
+    description: "Personal Access Token for authentication"
     required: true
   url:
-    description: 'URL of the NuGet feed'
+    description: "URL of the NuGet feed"
     required: true
   username:
-    description: 'Username for source authentication'
+    description: "Username for source authentication"
     required: true
 runs:
   using: "composite"
   steps:
+    - name: Validate Inputs
+      shell: bash
+      run: |
+        missing=0
+        if [ -z "${{ inputs.name }}" ]; then echo "Name input missing."; missing=1; fi
+        if [ -z "${{ inputs.username }}" ]; then echo "Username input missing."; missing=1; fi
+        if [ -z "${{ inputs.password }}" ]; then echo "Password input missing."; missing=1; fi
+        if [ -z "${{ inputs.url }}" ]; then echo "Url input missing."; missing=1; fi
+        if [ "$missing" -ne 0 ]; then exit 1; fi
+        echo "Configuring NuGet source '${{ inputs.name }}'..."
+
     - name: Configure NuGet authentication
       shell: bash
       run: |
