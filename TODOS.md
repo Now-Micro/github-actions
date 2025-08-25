@@ -1,13 +1,5 @@
-- demo/linting (finish):
-    - namesspace standard
-    - figure out how to inject  <ItemGroup>
-    <ProjectReference
-      Include="..\..\${{ inputs.code-analyzers-name }}$\Demo.Analyzers\Demo.Analyzers.csproj"
-      OutputItemType="Analyzer"
-      ReferenceOutputAssembly="false"
-    />
-  </ItemGroup>
-    - address # Todo: change when done in demo-coding-standards.yml
+- handle todo comments (search for 'todo:')
+- need to test that nuget/nuget-source and any other action that has changed in this branch
 
 - make sure that CSharpier adheres to standards [here](https://github.com/Now-Micro/CodeBits/blob/main/.github/copilot-instructions.md)
 - publish the newest from actions repo as v1 (regarding the get-unique-directories changes).  
