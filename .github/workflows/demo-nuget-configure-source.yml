@@ -2,11 +2,6 @@ name: Demo - Nuget Configure Source
 
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - 'nuget/configure-source/**'
-      - 'dotnet/build/**'
-      - '.github/workflows/demo-nuget-configure-source.yml'
 
 jobs:
   direct-configure:
