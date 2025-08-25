@@ -133,6 +133,9 @@ test('valid single', () => {
     assert.match(r.out, /Validated 1 source/);
     assert.match(r.outputs, /count=1/);
     assert.match(r.outputs, /names=A/);
+    assert.match(r.outputs, /usernames=u/);
+    assert.match(r.outputs, /passwords=p/);
+    assert.match(r.outputs, /urls=x/);
 });
 
 test('valid multi with spaces and empty items filtered', () => {
