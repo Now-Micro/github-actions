@@ -16,3 +16,4 @@ runs:
       with:
         debug-mode: 'true'
         directory: ${{ inputs.directory }}
+        roslyn-version: ${{ inputs.roslyn-version }}
