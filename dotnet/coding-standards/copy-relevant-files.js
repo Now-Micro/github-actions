@@ -38,12 +38,12 @@ function run() {
     
     const root = parseFirstRoot(rawRoots, directory);
 
-    console.log("Running copy-relevant-files.js");
-    console.log(`Raw Roots: ${rawRoots}`);
-    console.log(`Directory: ${directory}`);
-    console.log(`Code Analyzers Name: ${codeAnalyzersName}`);
-    console.log(`Source Dir: ${sourceDir}`);
-    console.log(`Derived Root: ${root}`);
+    log("Running copy-relevant-files.js");
+    log(`Raw Roots: ${rawRoots}`);
+    log(`Directory: ${directory}`);
+    log(`Code Analyzers Name: ${codeAnalyzersName}`);
+    log(`Source Dir: ${sourceDir}`);
+    log(`Derived Root: ${root}`);
     if (!root) { err('No root directory resolved'); process.exit(1); }
     if (!sourceDir) {
         err('No source directory provided'); 
