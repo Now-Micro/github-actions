@@ -1,40 +1,62 @@
 name: "Configure Nuget Source"
-description: "Configures NuGet to use a source"
+description: "Configures NuGet to use one or more sources"
 inputs:
-  name:
-    description: "Name of the NuGet source"
+  names:
+    description: "Comma-separated names of the NuGet sources"
     required: true
-  password:
-    description: "Personal Access Token for authentication"
+  passwords:
+    description: "Comma-separated Personal Access Tokens for authentication"
     required: true
-  url:
-    description: "URL of the NuGet feed"
+  urls:
+    description: "Comma-separated URLs of the NuGet feeds"
     required: true
-  username:
-    description: "Username for source authentication"
+  usernames:
+    description: "Comma-separated usernames for source authentication"
     required: true
+  degug-mode:
+    description: "Enable verbose debug logging (true/false)"
+    required: false
+    default: 'false'
+
 runs:
   using: "composite"
   steps:
-    - name: Validate Inputs
+    - name: Validate and Expand Inputs
+      id: validate
       shell: bash
-      run: |
-        missing=0
-        if [ -z "${{ inputs.name }}" ]; then echo "Name input missing."; missing=1; fi
-        if [ -z "${{ inputs.username }}" ]; then echo "Username input missing."; missing=1; fi
-        if [ -z "${{ inputs.password }}" ]; then echo "Password input missing."; missing=1; fi
-        if [ -z "${{ inputs.url }}" ]; then echo "Url input missing."; missing=1; fi
-        if [ "$missing" -ne 0 ]; then exit 1; fi
-        echo "Configuring NuGet source '${{ inputs.name }}'..."
+      run: node "$GITHUB_ACTION_PATH/validate-and-export.js"
+      env:
+        INPUT_NAMES: ${{ inputs.names }}
+        INPUT_USERNAMES: ${{ inputs.usernames }}
+        INPUT_PASSWORDS: ${{ inputs.passwords }}
+        INPUT_URLS: ${{ inputs.urls }}
+        INPUT_DEGUG_MODE: ${{ inputs.degug-mode }}
 
-    - name: Configure NuGet authentication
+    - name: Configure NuGet authentication for each source
+      if: steps.validate.outputs.count != '0'
       shell: bash
       run: |
-        dotnet nuget list source
-        if dotnet nuget list source | grep -q '${{ inputs.url }}'; then
-          echo "NuGet source '${{ inputs.name }}' already exists. Updating..."
-          dotnet nuget update source '${{ inputs.name }}' --username '${{ inputs.username }}' --password ${{ inputs.password }} --store-password-in-clear-text
-          exit 0
-        fi
-        echo "Adding NuGet source '${{ inputs.name }}'..."
-        dotnet nuget add source --username '${{ inputs.username }}' --password ${{ inputs.password }} --store-password-in-clear-text --name '${{ inputs.name }}' '${{ inputs.url }}'
+        set -e
+        echo "Configuring ${{ steps.validate.outputs.count }} NuGet source(s)..."
+        count='${{ steps.validate.outputs.count }}'
+        IFS=',' read -ra names <<< '${{ steps.validate.outputs.names }}'
+        IFS=',' read -ra usernames <<< '${{ steps.validate.outputs.usernames }}'
+        IFS=',' read -ra passwords <<< '${{ steps.validate.outputs.passwords }}'
+        IFS=',' read -ra urls <<< '${{ steps.validate.outputs.urls }}'
+
+        for ((i=0; i<count; i++)); do
+          name="${names[$i]}"
+          username="${usernames[$i]}"
+          password="${passwords[$i]}"
+          url="${urls[$i]}"
+
+          echo "Processing NuGet source '$name' ($url)"
+          dotnet nuget list source
+          if dotnet nuget list source | grep -q "$url"; then
+            echo "NuGet source '$name' already exists. Updating..."
+            dotnet nuget update source "$name" --username "$username" --password "$password" --store-password-in-clear-text
+          else
+            echo "Adding NuGet source '$name'..."
+            dotnet nuget add source --username "$username" --password "$password" --store-password-in-clear-text --name "$name" "$url"
+          fi
+        done

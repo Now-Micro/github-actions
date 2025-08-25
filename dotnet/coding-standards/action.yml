@@ -125,7 +125,6 @@ runs:
         cat "$ANALYZERS_DIR/${{ inputs.code-analyzers-name }}.csproj"
 
     - name: Configure Nuget
-      if: inputs.nuget-name != '' || inputs.nuget-password != '' || inputs.nuget-url != '' || inputs.nuget-username != ''
       # todo: replace this before publishing
       # uses: Now-Micro/actions/nuget/configure-source@v1
       uses: ./nuget/configure-source
