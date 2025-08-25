@@ -1,4 +1,10 @@
-- do i need to add the nuget configuration step before building in code-standards?
+- refactor nuget/configure-source
+  -- allow it configure multiples sources in one step (i.e. use comma-separated values for each input)
+    --- need to first validate things
+    --- add tests
+    --- needs to support existing implementation of only one value
+    --- refactor the usage in dotnet/coding-standards
+
 - handle todo comments (search for 'todo:')
 - need to test that nuget/nuget-source and any other action that has changed in this branch
 
