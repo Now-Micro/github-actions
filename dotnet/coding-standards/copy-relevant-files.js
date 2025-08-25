@@ -31,6 +31,8 @@ function filesEqual(a, b) {
 function ensureDir(p) { fs.mkdirSync(p, { recursive: true }); }
 
 function overrideRoslynVersionIfProvided(csprojPath, roslynVersion) {
+    log(`Checking for Roslyn version override: ${roslynVersion}`);
+    log(`csprojPath: ${csprojPath}`);
     if (!roslynVersion) return false;
     if (!fs.existsSync(csprojPath)) {
         err(`Analyzer csproj not found for override: ${csprojPath}`);
@@ -73,6 +75,7 @@ function run() {
     log(`Raw Roots: ${rawRoots}`);
     log(`Directory: ${directory}`);
     log(`Code Analyzers Name: ${codeAnalyzersName}`);
+    log(`Roselyn Version: ${roslynVersion}`);
     log(`Source Dir: ${sourceDir}`);
     if (roslynVersion) log(`Roslyn Version Override: ${roslynVersion}`);
     log(`Derived Root: ${root}`);
