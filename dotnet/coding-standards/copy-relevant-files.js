@@ -62,6 +62,53 @@ function overrideRoslynVersionIfProvided(csprojPath, roslynVersion) {
     }
 }
 
+function normalizeAnalyzerUnshippedHeader(analyzersDir) {
+    try {
+        const unshippedPath = path.join(analyzersDir, 'AnalyzerReleases.Unshipped.md');
+        if (!fs.existsSync(unshippedPath)) return false;
+        let text = fs.readFileSync(unshippedPath, 'utf8');
+        const original = text;
+        // Strip BOM
+        if (text.charCodeAt(0) === 0xFEFF) {
+            text = text.slice(1);
+        }
+        // Determine first significant line (non-empty, not a comment starting with ';')
+        const lines = text.split(/\r?\n/);
+        let firstIdx = 0;
+        while (firstIdx < lines.length) {
+            const t = lines[firstIdx].trim();
+            if (t === '' || t.startsWith(';')) { firstIdx++; continue; }
+            break;
+        }
+        const firstLine = lines[firstIdx] ?? '';
+        const firstTrim = firstLine.trim();
+        if (firstTrim !== '## Unshipped') {
+            // Prepend the header at the very top, followed by a blank line
+            text = '## Unshipped\n\n' + lines.slice(firstIdx).join('\n');
+        } else {
+            // Ensure header is at the very top (move existing content under it)
+            if (firstIdx !== 0) {
+                const rest = lines.slice(firstIdx + 1).join('\n');
+                text = '## Unshipped\n' + (rest ? ('\n' + rest) : '');
+            } else {
+                // Ensure a newline after header
+                if (lines.length > 1 && lines[1].trim() !== '') {
+                    text = '## Unshipped\n\n' + lines.slice(1).join('\n');
+                }
+            }
+        }
+        if (text !== original) {
+            fs.writeFileSync(unshippedPath, text, 'utf8');
+            log('Normalized AnalyzerReleases.Unshipped.md header to "## Unshipped"');
+            return true;
+        }
+        return false;
+    } catch (e) {
+        err(`Failed to normalize Unshipped header: ${e.message}`);
+        return false;
+    }
+}
+
 function run() {
     const rawRoots = process.env.INPUT_UNIQUE_ROOT_DIRECTORIES || '';
     const directory = process.env.INPUT_DIRECTORY || '';
@@ -75,7 +122,6 @@ function run() {
     log(`Raw Roots: ${rawRoots}`);
     log(`Directory: ${directory}`);
     log(`Code Analyzers Name: ${codeAnalyzersName}`);
-    log(`Roselyn Version: ${roslynVersion}`);
     log(`Source Dir: ${sourceDir}`);
     if (roslynVersion) log(`Roslyn Version Override: ${roslynVersion}`);
     log(`Derived Root: ${root}`);
@@ -134,6 +180,9 @@ function run() {
         }
     }
     log(`Copied analyzers to ${analyzersTarget}`);
+
+    // Ensure Unshipped header normalization to satisfy RS2007
+    normalizeAnalyzerUnshippedHeader(analyzersTarget);
 
     // Optionally override Roslyn version in the copied analyzer csproj
     if (roslynVersion) {
