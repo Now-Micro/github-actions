@@ -1,4 +1,4 @@
-name: demo-nuget-configure-source
+name: Demo - Nuget Configure Source
 
 on:
   workflow_dispatch:
