@@ -1,0 +1,16 @@
+name: Demo - Code Standards (Fail - Version)
+on:
+  workflow_dispatch:
+jobs:
+  demo-code-standards:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run demo for code standards
+        uses: ./.github/actions/demo-code-standards
+        with:
+          directory: './demo/coding-standards-fail'
+          roslyn-analyzers-version: '4.9.2'
+          
