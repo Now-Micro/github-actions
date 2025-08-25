@@ -13,4 +13,3 @@ jobs:
         with:
           directory: './demo/coding-standards-fail'
           roslyn-analyzers-version: '4.9.2'
-          
