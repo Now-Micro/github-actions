@@ -14,6 +14,10 @@ inputs:
   directory:
     description: 'Directory to run coding standards checks in.  This should be the root directory of your .NET solution.'
     required: true
+  roslyn-version:
+    description: 'Optional override for Microsoft.CodeAnalysis.CSharp package version used by the analyzers project . If empty, the bundled version is used (see ./analyzers/CodingStandards.Analyzers/CodingStandards.Analyzers.csproj).'
+    required: false
+    default: ''
 
 runs:
   using: 'composite'
@@ -64,6 +68,7 @@ runs:
         INPUT_DIRECTORY: ${{ inputs.directory }}
         INPUT_CODE_ANALYZERS_NAME: ${{ inputs.code-analyzers-name }}
         INPUT_SOURCE_DIR: ./dotnet/coding-standards
+        INPUT_ROSLYN_VERSION: ${{ inputs.roslyn-version }}
 
     - name: Get Relative Path
       id: get-relative-path
@@ -107,17 +112,11 @@ runs:
         echo "== Analyzer project file contents =="
         cat "$ANALYZERS_DIR/${{ inputs.code-analyzers-name }}.csproj"
 
-    - name: Restore
-      shell: bash
-      id: restore
-      continue-on-error: true
-      run: dotnet restore ${{ steps.get-project-and-solution-files.outputs.solution-found }}
-
     - name: Build Solution
       shell: bash
       if: steps.restore.outcome == 'success'
       continue-on-error: true
-      run: dotnet build ${{ steps.get-project-and-solution-files.outputs.solution-found }} --no-restore
+      run: dotnet build ${{ steps.get-project-and-solution-files.outputs.solution-found }}
 
     - name: Clean Up
       shell: bash
@@ -142,4 +141,4 @@ runs:
 
         # Remove temp project copy folder
         echo "Removing temporary project copy folder"
-        rm -rf $GITHUB_WORKSPACE/project-file-copy 
+        rm -rf $GITHUB_WORKSPACE/project-file-copy

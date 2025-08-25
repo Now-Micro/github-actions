@@ -96,3 +96,105 @@ test('run: errors when source missing', () => {
   const code = withExitCapture(() => withEnv({ INPUT_UNIQUE_ROOT_DIRECTORIES: '["' + root.replace(/\\/g, '/') + '"]', INPUT_DIRECTORY: root, INPUT_SOURCE_DIR: path.join(root, 'nope') }, () => run()));
   assert.strictEqual(code, 1);
 });
+
+test('run: applies Roslyn version override when matches present', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'copy-'));
+  const source = path.join(tmp, 'src');
+  const analyzers = path.join(source, 'analyzers', 'CodeStandards.Analyzers');
+  fs.mkdirSync(analyzers, { recursive: true });
+  fs.writeFileSync(path.join(source, '.editorconfig'), 'root=true\n');
+  const csprojPath = path.join(analyzers, 'CodeStandards.Analyzers.csproj');
+  fs.writeFileSync(csprojPath, `
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.7.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.7.0" />
+  </ItemGroup>
+</Project>`);
+  const root = path.join(tmp, 'root');
+  const r = withEnv({
+    INPUT_UNIQUE_ROOT_DIRECTORIES: '["' + root.replace(/\\/g, '/') + '"]',
+    INPUT_DIRECTORY: root,
+    INPUT_CODE_ANALYZERS_NAME: 'CodeStandards.Analyzers',
+    INPUT_SOURCE_DIR: source,
+    INPUT_ROSLYN_VERSION: '4.8.0'
+  }, () => run());
+  const destCsproj = path.join(root, 'CodeStandards.Analyzers', 'CodeStandards.Analyzers.csproj');
+  const destXml = fs.readFileSync(destCsproj, 'utf8');
+  assert.ok(/Version="4\.8\.0"/.test(destXml));
+  assert.ok(!/Version="4\.7\.0"/.test(destXml));
+  assert.match(r.out, /Roslyn Version Override: 4\.8\.0/);
+  assert.match(r.out, /Applied Roslyn version override 4\.8\.0 to CodeStandards\.Analyzers\.csproj/);
+});
+
+test('run: Roslyn override no-ops when no matching PackageReference entries', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'copy-'));
+  const source = path.join(tmp, 'src');
+  const analyzers = path.join(source, 'analyzers', 'CodeStandards.Analyzers');
+  fs.mkdirSync(analyzers, { recursive: true });
+  fs.writeFileSync(path.join(source, '.editorconfig'), 'root=true\n');
+  const csprojPath = path.join(analyzers, 'CodeStandards.Analyzers.csproj');
+  fs.writeFileSync(csprojPath, `
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Some.Other.Package" Version="1.2.3" />
+  </ItemGroup>
+</Project>`);
+  const root = path.join(tmp, 'root');
+  const r = withEnv({
+    INPUT_UNIQUE_ROOT_DIRECTORIES: '["' + root.replace(/\\/g, '/') + '"]',
+    INPUT_DIRECTORY: root,
+    INPUT_CODE_ANALYZERS_NAME: 'CodeStandards.Analyzers',
+    INPUT_SOURCE_DIR: source,
+    INPUT_ROSLYN_VERSION: '4.8.0'
+  }, () => run());
+  const destCsproj = path.join(root, 'CodeStandards.Analyzers', 'CodeStandards.Analyzers.csproj');
+  const destXml = fs.readFileSync(destCsproj, 'utf8');
+  assert.match(r.out, /No matching PackageReference entries found to override/);
+  assert.ok(/Some\.Other\.Package/.test(destXml));
+  assert.ok(/Version="1\.2\.3"/.test(destXml));
+});
+
+test('run: Roslyn override warns when analyzer csproj missing', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'copy-'));
+  const source = path.join(tmp, 'src');
+  const analyzers = path.join(source, 'analyzers', 'CodeStandards.Analyzers');
+  fs.mkdirSync(analyzers, { recursive: true });
+  fs.writeFileSync(path.join(source, '.editorconfig'), 'root=true\n');
+  // deliberately do NOT create the csproj
+  const root = path.join(tmp, 'root');
+  const r = withEnv({
+    INPUT_UNIQUE_ROOT_DIRECTORIES: '["' + root.replace(/\\/g, '/') + '"]',
+    INPUT_DIRECTORY: root,
+    INPUT_CODE_ANALYZERS_NAME: 'CodeStandards.Analyzers',
+    INPUT_SOURCE_DIR: source,
+    INPUT_ROSLYN_VERSION: '4.8.0'
+  }, () => run());
+  assert.match(r.err, /Analyzer csproj not found for override/);
+});
+
+test('run: no Roslyn override when input not provided', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'copy-'));
+  const source = path.join(tmp, 'src');
+  const analyzers = path.join(source, 'analyzers', 'CodeStandards.Analyzers');
+  fs.mkdirSync(analyzers, { recursive: true });
+  fs.writeFileSync(path.join(source, '.editorconfig'), 'root=true\n');
+  const csprojPath = path.join(analyzers, 'CodeStandards.Analyzers.csproj');
+  fs.writeFileSync(csprojPath, `
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.7.0" />
+  </ItemGroup>
+</Project>`);
+  const root = path.join(tmp, 'root');
+  const r = withEnv({
+    INPUT_UNIQUE_ROOT_DIRECTORIES: '["' + root.replace(/\\/g, '/') + '"]',
+    INPUT_DIRECTORY: root,
+    INPUT_CODE_ANALYZERS_NAME: 'CodeStandards.Analyzers',
+    INPUT_SOURCE_DIR: source
+  }, () => run());
+  const destCsproj = path.join(root, 'CodeStandards.Analyzers', 'CodeStandards.Analyzers.csproj');
+  const destXml = fs.readFileSync(destCsproj, 'utf8');
+  assert.ok(/Version="4\.7\.0"/.test(destXml));
+  assert.ok(!/Roslyn Version Override:/.test(r.out));
+});

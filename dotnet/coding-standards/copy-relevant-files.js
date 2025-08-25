@@ -30,11 +30,42 @@ function filesEqual(a, b) {
 
 function ensureDir(p) { fs.mkdirSync(p, { recursive: true }); }
 
+function overrideRoslynVersionIfProvided(csprojPath, roslynVersion) {
+    if (!roslynVersion) return false;
+    if (!fs.existsSync(csprojPath)) {
+        err(`Analyzer csproj not found for override: ${csprojPath}`);
+        return false;
+    }
+    try {
+        let xml = fs.readFileSync(csprojPath, 'utf8');
+        const before = xml;
+        const patterns = [
+            /(<PackageReference\s+Include="Microsoft\.CodeAnalysis\.CSharp"(?:[\s\S]*?)Version=")([^"]+)("[\s\S]*?\/>)/g,
+            /(<PackageReference\s+Include="Microsoft\.CodeAnalysis\.CSharp\.Workspaces"(?:[\s\S]*?)Version=")([^"]+)("[\s\S]*?\/>)/g
+        ];
+        for (const re of patterns) {
+            xml = xml.replace(re, (_m, p1, _v, p3) => `${p1}${roslynVersion}${p3}`);
+        }
+        if (xml !== before) {
+            fs.writeFileSync(csprojPath, xml, 'utf8');
+            log(`Applied Roslyn version override ${roslynVersion} to ${path.basename(csprojPath)}`);
+            return true;
+        } else {
+            log(`No matching PackageReference entries found to override in ${path.basename(csprojPath)}`);
+            return false;
+        }
+    } catch (e) {
+        err(`Failed to apply Roslyn version override: ${e.message}`);
+        return false;
+    }
+}
+
 function run() {
     const rawRoots = process.env.INPUT_UNIQUE_ROOT_DIRECTORIES || '';
     const directory = process.env.INPUT_DIRECTORY || '';
     const codeAnalyzersName = process.env.INPUT_CODE_ANALYZERS_NAME;
     const sourceDir = process.env.INPUT_SOURCE_DIR;
+    const roslynVersion = process.env.INPUT_ROSLYN_VERSION || '';
     
     const root = parseFirstRoot(rawRoots, directory);
 
@@ -43,6 +74,7 @@ function run() {
     log(`Directory: ${directory}`);
     log(`Code Analyzers Name: ${codeAnalyzersName}`);
     log(`Source Dir: ${sourceDir}`);
+    if (roslynVersion) log(`Roslyn Version Override: ${roslynVersion}`);
     log(`Derived Root: ${root}`);
     if (!root) { err('No root directory resolved'); process.exit(1); }
     if (!sourceDir) {
@@ -59,7 +91,6 @@ function run() {
     log(`Source Dir: ${sourceDir}`);
 
     ensureDir(root);
-    // Fix: remove stray '$' at end of folder name
     const analyzersTarget = path.join(root, codeAnalyzersName);
     ensureDir(analyzersTarget);
 
@@ -77,13 +108,11 @@ function run() {
         log('Copied .editorconfig');
     }
 
-    // Copy analyzers directory (shallow copy)
     const srcAnalyzersDir = path.join(sourceDir, 'analyzers', codeAnalyzersName);
     if (!fs.existsSync(srcAnalyzersDir)) {
         err(`Missing ${srcAnalyzersDir}`);
         process.exit(1);
     }
-    // Copy all files recursively
     const stack = [srcAnalyzersDir];
     while (stack.length) {
         const cur = stack.pop();
@@ -102,6 +131,12 @@ function run() {
         }
     }
     log(`Copied analyzers to ${analyzersTarget}`);
+
+    // Optionally override Roslyn version in the copied analyzer csproj
+    if (roslynVersion) {
+        const analyzerCsproj = path.join(analyzersTarget, `${codeAnalyzersName}.csproj`);
+        overrideRoslynVersionIfProvided(analyzerCsproj, roslynVersion);
+    }
 }
 
 if (require.main === module) {
