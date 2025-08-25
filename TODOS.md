@@ -1,5 +1,4 @@
 - do i need to add the nuget configuration step before building in code-standards?
-- need to copy stuff from AnalyzerReleases.UnShipped.md to AnalyzerReleases.Shipped.md (ask more about this)
 - handle todo comments (search for 'todo:')
 
 - make sure that CSharpier adheres to standards [here](https://github.com/Now-Micro/CodeBits/blob/main/.github/copilot-instructions.md)
