@@ -1,4 +1,5 @@
 - add an input to allow for customization of the version used for [analyzers project](dotnet/coding-standards/analyzers/CodingStandards.Analyzers/CodingStandards.Analyzers.csproj) (currently "4.8.0").
+- do i need to add the nuget configuration step before building in code-standards?
 - need to copy stuff from AnalyzerReleases.UnShipped.md to AnalyzerReleases.Shipped.md (ask more about this)
 - handle todo comments (search for 'todo:')
 
