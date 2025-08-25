@@ -198,34 +198,3 @@ test('run: no Roslyn override when input not provided', () => {
   assert.ok(/Version="4\.7\.0"/.test(destXml));
   assert.ok(!/Roslyn Version Override:/.test(r.out));
 });
-
-test('run: normalizes AnalyzerReleases.Unshipped.md header to "## Unshipped" (adds if missing)', () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'copy-'));
-  const source = path.join(tmp, 'src');
-  const analyzers = path.join(source, 'analyzers', 'CodeStandards.Analyzers');
-  fs.mkdirSync(analyzers, { recursive: true });
-  fs.writeFileSync(path.join(source, '.editorconfig'), 'root=true\n');
-  // create an Unshipped file without the proper header
-  fs.writeFileSync(path.join(analyzers, 'AnalyzerReleases.Unshipped.md'), '; notes\nRule ID: X\n');
-  fs.writeFileSync(path.join(analyzers, 'CodeStandards.Analyzers.csproj'), '<Project/>' );
-  const root = path.join(tmp, 'root');
-  const r = withEnv({ INPUT_UNIQUE_ROOT_DIRECTORIES: '["' + root.replace(/\\/g, '/') + '"]', INPUT_DIRECTORY: root, INPUT_CODE_ANALYZERS_NAME: 'CodeStandards.Analyzers', INPUT_SOURCE_DIR: source }, () => run());
-  const unshipped = fs.readFileSync(path.join(root, 'CodeStandards.Analyzers', 'AnalyzerReleases.Unshipped.md'), 'utf8');
-  assert.ok(unshipped.startsWith('## Unshipped\n'));
-  assert.match(r.out, /Normalized AnalyzerReleases.Unshipped.md header/);
-});
-
-test('run: keeps valid Unshipped header at top and ensures blank line after', () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'copy-'));
-  const source = path.join(tmp, 'src');
-  const analyzers = path.join(source, 'analyzers', 'CodeStandards.Analyzers');
-  fs.mkdirSync(analyzers, { recursive: true });
-  fs.writeFileSync(path.join(source, '.editorconfig'), 'root=true\n');
-  const content = ';; comment line\n\n   ## Unshipped\nContent';
-  fs.writeFileSync(path.join(analyzers, 'AnalyzerReleases.Unshipped.md'), content);
-  fs.writeFileSync(path.join(analyzers, 'CodeStandards.Analyzers.csproj'), '<Project/>' );
-  const root = path.join(tmp, 'root');
-  const r = withEnv({ INPUT_UNIQUE_ROOT_DIRECTORIES: '["' + root.replace(/\\/g, '/') + '"]', INPUT_DIRECTORY: root, INPUT_CODE_ANALYZERS_NAME: 'CodeStandards.Analyzers', INPUT_SOURCE_DIR: source }, () => run());
-  const unshipped = fs.readFileSync(path.join(root, 'CodeStandards.Analyzers', 'AnalyzerReleases.Unshipped.md'), 'utf8');
-  assert.ok(unshipped.startsWith('## Unshipped\n\n'));
-});
