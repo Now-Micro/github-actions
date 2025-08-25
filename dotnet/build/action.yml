@@ -64,9 +64,7 @@ runs:
         cache-dependency-path: ${{ inputs.npm-cache-dependency-path }}
 
     - name: Configure NuGet sources
-      # todo: replace this before publishing
-      # uses: Now-Micro/actions/nuget/configure-source@v1
-      uses: ./nuget/configure-source
+      uses: Now-Micro/actions/nuget/configure-source@v1
       with:
         names: 'CodeBits, Code-Hole'
         passwords: '${{ inputs.github-packages-token }}, ${{ inputs.azure-devops-password }}'
