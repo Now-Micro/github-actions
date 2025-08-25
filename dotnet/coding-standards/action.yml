@@ -116,13 +116,13 @@ runs:
       shell: bash
       id: restore
       continue-on-error: true
-      run: dotnet restore ${{ steps.get-project-and-solution-files.outputs.solution-found }}
+      run: dotnet restore ${{ steps.get-project-and-solution-files.outputs.solution-found }} -v:q
 
     - name: Build Solution
       shell: bash
       if: steps.restore.outcome == 'success'
       continue-on-error: true
-      run: dotnet build ${{ steps.get-project-and-solution-files.outputs.solution-found }} --no-restore
+      run: dotnet build ${{ steps.get-project-and-solution-files.outputs.solution-found }} --no-restore -v:q
 
     - name: Clean Up
       shell: bash
